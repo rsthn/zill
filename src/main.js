@@ -1,0 +1,2 @@
+
+require('./elems/dialog.js');
