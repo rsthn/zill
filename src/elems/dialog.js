@@ -1,7 +1,6 @@
-const Element = require('@rsthn/rin/element');
 const xui = require('../xui');
 
-Element.register ('xui-dialog',
+xui.register ('xui-dialog',
 {
 	isRoot: true,
 
@@ -15,9 +14,8 @@ Element.register ('xui-dialog',
 	{
 		this.classList.add('xui-dialog');
 
-		if (this.classList.contains('x-draggable')) {
+		if (this.classList.contains('x-draggable'))
 			xui.draggable.attach(this.querySelector('.header'), this);
-		}
 	},
 
 	hide: function()

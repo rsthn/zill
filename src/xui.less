@@ -1,5 +1,14 @@
 @import (reference) "./constants.less";
 
+.repeat(@list, @name, @prop, @sel:~'', @i:1) when (@i <= length(@list)) {
+	@value: extract(@list, @i);
+
+	.@{name}-@{i} @{sel} { @{prop}: @i*@px; }
+
+	.repeat(@list, @name, @prop, @sel, @i+1);
+}
+
+/* ************************** */
 html {
 	font-size: @font-size; line-height: (@font-size + 2px);
 }
@@ -14,4 +23,34 @@ html {
 	cursor: if(@cursor="", default, e(%("url(%a) 2 2, auto", @cursor)));
 }
 
+
+/* ************************** */
+.repeat(@sizes, p, padding);
+.repeat(@sizes, pl, padding-left);
+.repeat(@sizes, pr, padding-right);
+.repeat(@sizes, pt, padding-top);
+.repeat(@sizes, pb, padding-bottom);
+
+.repeat(@sizes, m, margin);
+.repeat(@sizes, ml, margin-left);
+.repeat(@sizes, mr, margin-right);
+.repeat(@sizes, mt, margin-top);
+.repeat(@sizes, mb, margin-bottom);
+
+.repeat(@sizes, ch-m, margin, ~'> *');
+.repeat(@sizes, ch-ml, margin-left, ~'> *');
+.repeat(@sizes, ch-mr, margin-right, ~'> *');
+.repeat(@sizes, ch-mt, margin-top, ~'> *');
+.repeat(@sizes, ch-mb, margin-bottom, ~'> *');
+
+/* ************************** */
+.row {
+	display: flex;
+}
+
+.row > * {
+	flex: 1 1 auto;
+}
+
 @import "./css/dialog.less";
+@import "./css/list.less";

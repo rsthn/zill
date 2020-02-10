@@ -27,7 +27,7 @@
 
 /* ****************************************** */
 .xui-dialog {
-	position: absolute; overflow: visible; font-size: 1rem;
+	position: absolute; overflow: visible; font-size: 1rem; display: flex; flex-direction: column;
 	transform-style: preserve-3d; transform-origin: 50% 0%;
 	border: 1*@px solid @border-color; background: @background-base;
 	box-shadow: 0*@px 0*@px 12*@px @shadow-color-hard; border-radius: @border-radius;
@@ -39,13 +39,13 @@
 }
 
 .xui-dialog.hidden {
-	display: block !important; pointer-events: none;
+	display: flex !important; pointer-events: none;
 	animation-name: dialog-hidden; animation-duration: 0.350s; animation-fill-mode: both;
 	animation-timing-function: cubic-bezier(0.550, 0.055, 0.675, 0.190);
 }
 
 .xui-dialog.visible {
-	display: block !important;
+	display: flex !important;
 	animation-name: dialog-visible; animation-duration: 0.350s; animation-fill-mode: both;
 	animation-timing-function: cubic-bezier(0.165, 0.840, 0.440, 1.000);
 }
@@ -53,70 +53,74 @@
 /* ****************************************** */
 /* HEADER */
 
-.xui-dialog .header {
+.xui-dialog > .header {
 	padding: 6*@px 12*@px; border-top: 1*@px solid @border-color-hi; border-bottom: 1*@px solid @border-color-lo;
-	background: linear-gradient(@base-color + #404040, @base-color + #303030); color: @base-text;
+	background: linear-gradient(@base-color + #404040, @base-color + #303030); color: @text-base;
 	box-shadow: 0*@px 2*@px 4*@px -2*@px @shadow-color-soft; border-radius: @border-radius @border-radius 0 0;
-	user-select: none;
+	user-select: none; flex: 0 0 auto;
 }
 
-.xui-dialog .header {
+.xui-dialog > .header {
 	display: block; position: relative; font-size: 0;
 }
 
-.xui-dialog .header > b {
+.xui-dialog > .header > b {
 	display: block; font-weight: normal; text-align: left; font-size: 1rem;
 }
 
-.xui-dialog .header > b i {
+.xui-dialog > .header > b i {
 	margin-right: 4*@px;
 }
 
-.xui-dialog .header > span {
+.xui-dialog > .header > span {
 	position: absolute; top: 0; right: 0;
 }
 
-.xui-dialog .header > span > i {
+.xui-dialog > .header > span > i {
 	display: inline-block; padding: 7*@px 12*@px; font-size: 1rem; text-align: center;
 }
 
-.xui-dialog .header > span > i:hover {
+.xui-dialog > .header > span > i:hover {
 	background: @border-color-hi;
 }
 
-.xui-dialog .header > span > i:last-child {
+.xui-dialog > .header > span > i:last-child {
 	border-radius: 0 @border-radius 0 0;
 }
 
 /* ~ */
-.xui-dialog.x-buttons-left .header > span > i:last-child {
+.xui-dialog.x-buttons-left > .header > span > i:last-child {
 	border-radius: 0;
 }
 
-.xui-dialog.x-buttons-left .header > span > i:first-child {
+.xui-dialog.x-buttons-left > .header > span > i:first-child {
 	border-radius: @border-radius 0 0 0;
 }
 
-.xui-dialog.x-buttons-left .header > span {
+.xui-dialog.x-buttons-left > .header > span {
 	right: auto; left: 0;
 }
 
-.xui-dialog.x-buttons-left .header > span > i {
+.xui-dialog.x-buttons-left > .header > span > i {
 	margin-left: 0; margin-right: 4*@px;
 }
 
-.xui-dialog.x-buttons-hidden .header > span {
+.xui-dialog.x-buttons-hidden > .header > span {
 	display: none;
 }
 
-.xui-dialog.x-title-center .header > b {
+.xui-dialog.x-title-center > .header > b {
 	text-align: center;
 }
 
-.xui-dialog.x-title-right .header > b {
+.xui-dialog.x-title-right > .header > b {
 	text-align: right;
 }
 
-.xui-dialog.x-title-bold .header > b {
+.xui-dialog.x-title-bold > .header > b {
 	font-weight: bold;
+}
+
+.xui-dialog > .content {
+	flex: 1 1 auto;
 }

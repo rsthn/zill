@@ -1,5 +1,21 @@
+const Element = require('@rsthn/rin/element');
+const Template = require('@rsthn/rin/template');
+
 const xui = module.exports =
 {
+	elements: [ ],
+
+	template: function (str)
+	{
+		return Template.compile(str);
+	},
+
+	register: function (name, ...protos)
+	{
+		this.elements.push(name);
+		Element.register(name, ...protos);
+	},
+
 	alignValue: function (value, step)
 	{
 		return Math.round(value/step)*step;

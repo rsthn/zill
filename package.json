@@ -2,7 +2,7 @@
   "name": "@rsthn/xui",
   "version": "2.0.0",
   "description": "UI Toolkit to build web based tools.",
-  "main": "main.js",
+  "main": "src/main.js",
   "scripts": {
     "test": "echo Ok",
     "build": "npm-run-all --parallel build-css build-js",

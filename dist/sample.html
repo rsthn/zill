@@ -17,20 +17,67 @@
 
 <body class="xui-app">
 
-	<xui-dialog class="x-draggable" style="left: 50%; margin-left: -300px; top: 40px;">
+	<xui-dialog class="x-draggable" style="left: 50%; margin-left: -300px; top: 40px; width: 550px; height: 400px;">
 
 		<div class="header">
-			<b><i class="fas fa-leaf"></i> Attributes</b>
+			<b><i class="fas fa-leaf"></i> Sample</b>
 
 			<span>
-				<i class="fas fa-download"></i>
-				<i class="fas fa-cog"></i>
 				<i data-action="hide" class="fas fa-times"></i>
 			</span>
 		</div>
 
-		<div class="content" style="padding: 24px 160px;">
-			Hello World
+		<div class="content p-8">
+
+			<div class="row ch-ml-4 ch-mr-4">
+				<div>
+					<xui-list data-rows="5">
+						<span>Option 1
+							<em>12,12,45</em>
+						</span>
+						<span>Option 2</span>
+						<span>Option 3</span>
+						<span>Option 4</span>
+						<span>Option 5</span>
+						<span>Option 6</span>
+						<span>Option 7</span>
+						<span>Option 8</span>
+						<span>Option 9</span>
+						<span>Option 10</span>
+					</xui-list>
+				</div>
+
+				<div>
+					<xui-list class="xx" data-rows="5">
+						<span data-value='1'>Option 1</span>
+						<span data-value='2'>Option 2</span>
+						<span data-value='3'>Option 3</span>
+						<span data-value='4'>Option 4</span>
+						<span data-value='5'>Option 5</span>
+						<span data-value='6'>Option 6</span>
+						<span data-value='7'>Option 7</span>
+						<span data-value='8'>Option 8</span>
+						<span data-value='9'>Option 9</span>
+						<span data-value='10'>Option 10</span>
+					</xui-list>
+				</div>
+
+				<div>
+					<xui-list data-rows="5">
+						<span>Option 1</span>
+						<span>Option 2</span>
+						<span>Option 3</span>
+						<span>Option 4</span>
+						<span>Option 5</span>
+						<span>Option 6</span>
+						<span>Option 7</span>
+						<span>Option 8</span>
+						<span>Option 9</span>
+						<span>Option 10</span>
+					</xui-list>
+				</div>
+			</div>
+
 		</div>
 
 	</xui-dialog>

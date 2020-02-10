@@ -1,0 +1,23 @@
+/* ****************************************** */
+.xui-list {
+	display: block; box-sizing: border-box; overflow: hidden;
+    box-shadow: inset 0px 4px 6px -4px @shadow-color-soft;
+	border-radius: @border-radius; border: 1px solid @border-color-lo; background: @background-lighter;
+	color: @text-base;
+}
+
+.xui-list > span {
+    position: relative; display: block; padding: 2*@px 4*@px;
+}
+
+.xui-list > span > em {
+	position: absolute; font-size: 0.8em; font-style: normal; right: 12*@px; color: @text-lighter;
+}
+
+.xui-list > span:hover {
+    background: @border-color-lo;
+}
+
+.xui-list > span.selected {
+    background: @base-color;
+}
