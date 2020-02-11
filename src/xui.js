@@ -54,20 +54,49 @@ const xui = module.exports =
 
 			if (!this.initialized)
 			{
-				window.onmousemove = this._handler.bind(this);
+				if ('ontouchstart' in window)
+				{
+					window.ontouchmove = (evt) => {
+document.getElementById('x').innerHTML='MOVE';
+						evt = evt.changedTouches[0];
+						this._handler(evt);
+					};
+				}
+				else	
+					window.onmousemove = this._handler.bind(this);
+
 				this.initialized = true;
 			}
 
-			handle.onmousedown = (evt) => {
-				this.state.sx = evt.clientX;
-				this.state.sy = evt.clientY;
-				this.state.pos = xui.position.get(this.state.target = target);
-				this.state.enabled = true;
-			};
+			if ('ontouchstart' in window)
+			{
+				handle.ontouchstart = (evt) => {
+document.getElementById('x').innerHTML='START';
+					evt = evt.changedTouches[0];
+					this.state.sx = evt.clientX;
+					this.state.sy = evt.clientY;
+					this.state.pos = xui.position.get(this.state.target = target);
+					this.state.enabled = true;
+				};
 
-			handle.onmouseup = (evt) => {
-				this.state.enabled = false;
-			};
+				handle.ontouchend = (evt) => {
+document.getElementById('x').innerHTML='END';
+					this.state.enabled = false;
+				};
+			}
+			else
+			{
+				handle.onmousedown = (evt) => {
+					this.state.sx = evt.clientX;
+					this.state.sy = evt.clientY;
+					this.state.pos = xui.position.get(this.state.target = target);
+					this.state.enabled = true;
+				};
+
+				handle.onmouseup = (evt) => {
+					this.state.enabled = false;
+				};
+			}
 		},
 
 		_handler: function (evt)

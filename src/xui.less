@@ -1,11 +1,15 @@
 @import (reference) "./constants.less";
 
-.repeat(@list, @name, @prop, @sel:~'', @i:1) when (@i <= length(@list)) {
+.repeatpx(@list, @prefix, @prop, @sel:~'', @i:1) when (@i <= length(@list)) {
 	@value: extract(@list, @i);
+	.@{prefix}-@{value} @{sel} { @{prop}: @value*@px; }
+	.repeatpx(@list, @prefix, @prop, @sel, @i+1);
+}
 
-	.@{name}-@{i} @{sel} { @{prop}: @i*@px; }
-
-	.repeat(@list, @name, @prop, @sel, @i+1);
+.repeat(@list, @prefix, @prop, @sel:~'', @i:1) when (@i <= length(@list)) {
+	@value: extract(@list, @i);
+	.@{prefix}-@{value} @{sel} { @{prop}: @value; }
+	.repeat(@list, @prefix, @prop, @sel, @i+1);
 }
 
 /* ************************** */
@@ -17,31 +21,34 @@ html {
 	position: absolute; left: 0; top: 0; width: 100vw; height: 100vh; margin: 0; padding: 0; overflow: hidden;
 	background-image: if(@background-image="", none, url(@background-image));
 	background-color: @base-color;
+	color: @text-base;
 }
 
 * {
 	cursor: if(@cursor="", default, e(%("url(%a) 2 2, auto", @cursor)));
 }
 
+/* ************************** */
+.repeat(@display-modes, d, display);
 
 /* ************************** */
-.repeat(@sizes, p, padding);
-.repeat(@sizes, pl, padding-left);
-.repeat(@sizes, pr, padding-right);
-.repeat(@sizes, pt, padding-top);
-.repeat(@sizes, pb, padding-bottom);
+.repeatpx(@sizes, p, padding);
+.repeatpx(@sizes, pl, padding-left);
+.repeatpx(@sizes, pr, padding-right);
+.repeatpx(@sizes, pt, padding-top);
+.repeatpx(@sizes, pb, padding-bottom);
 
-.repeat(@sizes, m, margin);
-.repeat(@sizes, ml, margin-left);
-.repeat(@sizes, mr, margin-right);
-.repeat(@sizes, mt, margin-top);
-.repeat(@sizes, mb, margin-bottom);
+.repeatpx(@sizes, m, margin);
+.repeatpx(@sizes, ml, margin-left);
+.repeatpx(@sizes, mr, margin-right);
+.repeatpx(@sizes, mt, margin-top);
+.repeatpx(@sizes, mb, margin-bottom);
 
-.repeat(@sizes, ch-m, margin, ~'> *');
-.repeat(@sizes, ch-ml, margin-left, ~'> *');
-.repeat(@sizes, ch-mr, margin-right, ~'> *');
-.repeat(@sizes, ch-mt, margin-top, ~'> *');
-.repeat(@sizes, ch-mb, margin-bottom, ~'> *');
+.repeatpx(@sizes, ch-m, margin, ~'> *');
+.repeatpx(@sizes, ch-ml, margin-left, ~'> *');
+.repeatpx(@sizes, ch-mr, margin-right, ~'> *');
+.repeatpx(@sizes, ch-mt, margin-top, ~'> *');
+.repeatpx(@sizes, ch-mb, margin-bottom, ~'> *');
 
 /* ************************** */
 .row {

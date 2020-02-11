@@ -11,6 +11,7 @@ xui.register ('xui-list',
 	init: function()
 	{
 		this.classList.add('xui-list');
+		this.type = 'field';
 
 		if (this.dataset.rows)
 		{
@@ -22,15 +23,23 @@ xui.register ('xui-list',
 	setValue: function (value)
 	{
 		let selected = this.querySelector('span[data-value="'+value+'"]');
-		if (!selected) return false;
+		if (!selected) return;
 
-		this.querySelectorAll('span.selected').forEach(i => i.classList.remove('selected'));
+		let curr = this.querySelector('span.selected');
+		if (curr)
+		{
+			if (curr.dataset.value == value)
+				return;
+
+			curr.classList.remove('selected');
+		}
+
 		selected.classList.add('selected');
 
-		return true;
+		if (this.onchange) this.onchange();
 	},
 
-	getValue: function (value)
+	getValue: function()
 	{
 		let selected = this.querySelector('span.selected');
 		return selected ? selected.dataset.value : null;

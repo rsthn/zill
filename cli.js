@@ -11,7 +11,7 @@ function mkdir (path)
 	if (!fs.existsSync(path)) fs.mkdirSync(path);
 }
 
-function cp (src, dst, overwrite=true)
+function cp (src, dst, overwrite=false)
 {
 	if (dst.endsWith('/'))
 		dst += path.basename(src);
@@ -53,6 +53,21 @@ if (args[0] == 'init')
 	cp(src+'/pointer.png', './dist/lib/xui/');
 	cp(src+'/font-default.css', './dist/lib/xui/');
 	cp(src+'/normalize.css', './dist/lib/xui/');
+
+	return;
+}
+
+// *************************************************************
+if (args[0] == 'update')
+{
+	const src = __dirname+'/dist';
+
+	cp(src+'/xui.js', './dist/lib/xui/', true);
+	cp(src+'/xui.css', './dist/lib/xui/', true);
+	cp(src+'/background.png', './dist/lib/xui/', true);
+	cp(src+'/pointer.png', './dist/lib/xui/', true);
+	cp(src+'/font-default.css', './dist/lib/xui/', true);
+	cp(src+'/normalize.css', './dist/lib/xui/', true);
 
 	return;
 }
