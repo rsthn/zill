@@ -54,49 +54,20 @@ const xui = module.exports =
 
 			if (!this.initialized)
 			{
-				if ('ontouchstart' in window)
-				{
-					window.ontouchmove = (evt) => {
-document.getElementById('x').innerHTML='MOVE';
-						evt = evt.changedTouches[0];
-						this._handler(evt);
-					};
-				}
-				else	
-					window.onmousemove = this._handler.bind(this);
-
+				window.onmousemove = this._handler.bind(this);
 				this.initialized = true;
 			}
 
-			if ('ontouchstart' in window)
-			{
-				handle.ontouchstart = (evt) => {
-document.getElementById('x').innerHTML='START';
-					evt = evt.changedTouches[0];
-					this.state.sx = evt.clientX;
-					this.state.sy = evt.clientY;
-					this.state.pos = xui.position.get(this.state.target = target);
-					this.state.enabled = true;
-				};
+			handle.onmousedown = (evt) => {
+				this.state.sx = evt.clientX;
+				this.state.sy = evt.clientY;
+				this.state.pos = xui.position.get(this.state.target = target);
+				this.state.enabled = true;
+			};
 
-				handle.ontouchend = (evt) => {
-document.getElementById('x').innerHTML='END';
-					this.state.enabled = false;
-				};
-			}
-			else
-			{
-				handle.onmousedown = (evt) => {
-					this.state.sx = evt.clientX;
-					this.state.sy = evt.clientY;
-					this.state.pos = xui.position.get(this.state.target = target);
-					this.state.enabled = true;
-				};
-
-				handle.onmouseup = (evt) => {
-					this.state.enabled = false;
-				};
-			}
+			handle.onmouseup = (evt) => {
+				this.state.enabled = false;
+			};
 		},
 
 		_handler: function (evt)
@@ -108,6 +79,65 @@ document.getElementById('x').innerHTML='END';
 			let dy = evt.clientY - this.state.sy;
 
 			xui.position.set (this.state.target, this.state.pos.x + dx, this.state.pos.y + dy);
+		}
+	},
+
+	scrollable:
+	{
+		initialized: false,
+
+		attach: function (target)
+		{
+			let mutex = false;
+
+			let bar = document.createElement('em');
+			bar.classList.add('vs-bar');
+
+			let innerBar = document.createElement('em');
+			bar.appendChild(innerBar);
+
+			let innerMostBar = document.createElement('em');
+			innerBar.appendChild(innerMostBar);
+
+			target.appendChild(bar);
+
+			target._observer_scroll = new MutationObserver(function()
+			{
+				if (mutex) return;
+
+				mutex = true;
+				let height = target.getBoundingClientRect().height;
+
+				if (bar.parentNode != target)
+				{
+					bar.style.top = '0px';
+					innerMostBar.style.height = '0px';
+
+					target.appendChild(bar);
+				}
+
+				mutex= false;
+			});
+
+			target._observer_scroll.observe(target, { childList: true });
+
+			let update = function()
+			{
+				let height = target.getBoundingClientRect().height;
+				innerMostBar.style.height = (100*height / target.scrollHeight).toFixed(2) + "%";
+				bar.style.top = target.scrollTop + "px";
+				innerMostBar.style.top = (100*target.scrollTop / target.scrollHeight).toFixed(2) + "%";
+			};
+
+			update();
+
+			target.onwheel = function (evt)
+			{
+				target.scrollTop += 15*evt.deltaY;
+
+				bar.style.top = target.scrollTop + "px";
+				innerMostBar.style.top = (100*target.scrollTop / target.scrollHeight).toFixed(2) + "%";
+			};
 		}
 	}
 };

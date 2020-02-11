@@ -18,6 +18,11 @@ xui.register ('xui-list',
 			this.style.height = '0px';
 			this.style.height = (this.dataset.rows*this.getHeight(this.children[0]) + this.getHeight()) + 'px';
 		}
+
+		if (this.classList.contains('x-scrollable'))
+		{
+			xui.scrollable.attach(this);
+		}
 	},
 
 	setValue: function (value)

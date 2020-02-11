@@ -1,4 +1,4 @@
-@import (reference) "./constants.less";
+@import (reference) "./css/constants.less";
 
 .repeatpx(@list, @prefix, @prop, @sel:~'', @i:1) when (@i <= length(@list)) {
 	@value: extract(@list, @i);
@@ -56,8 +56,10 @@ html {
 }
 
 .row > * {
-	flex: 1 1 auto;
+	flex: 1 1 0;
 }
+
+@import "./css/x-scrollable.less";
 
 @import "./css/dialog.less";
 @import "./css/list.less";
