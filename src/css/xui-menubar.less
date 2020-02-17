@@ -1,0 +1,105 @@
+@menu-item-width: 200*@px;
+
+/* ****************************************** */
+.xui-menubar {
+	position: relative; display: block; z-index: 9999; padding: 0 16*@px;
+	color: @text-base; border-top: 1px solid @border-color-hi; border-bottom: 1px solid @border-color-lo;
+	background: linear-gradient(@base-color + #404040, @base-color + #303030);
+	box-shadow: 0px 4px 4px -5px @shadow-color-soft; box-sizing: border-box;
+}
+
+.xui-dialog .xui-menubar {
+	border-top: none; border-bottom: 1px solid @border-color-mid;
+	margin-top: -1px; background: @base-color + #303030;
+}
+
+.xui-menubar > * {
+    display: inline-block; vertical-align: middle;
+}
+
+.xui-menubar > span {
+	display: inline-block; padding: 5*@px 8*@px;
+}
+
+.xui-menubar > span.right {
+    float: right;
+}
+
+.xui-menubar > span i {
+    margin-right: 3*@px;
+}
+
+.xui-menubar > div {
+    position: relative;
+}
+
+.xui-menubar li {
+	list-style: none; margin: 0; padding: 0; position: relative;
+	margin-left: -3*@px;
+}
+
+.xui-menubar ul {
+	display: none; margin: 0; padding: 0; position: absolute; z-index: 1; left: 0; top: 26*@px;
+	background: @base-color + #404040; min-width: @menu-item-width; white-space: nowrap;
+	box-shadow: 2px 2px 6px -2px rgba(0,0,0,0.7); border-radius:  0 @border-radius @border-radius @border-radius;
+	border-left: 4*@px solid @border-color-mid;
+}
+
+.xui-menubar div > b {
+    display: block; padding: 5*@px 8*@px; font-weight: normal;
+	text-shadow: 0px -1px 0px rgba(0,0,0,0.4);
+}
+
+.xui-menubar li > b {
+	display: block; position: relative; padding: 5*@px 8*@px 5*@px 32*@px; font-weight: normal;
+}
+
+.xui-menubar li > b > i {
+	margin-left: -22*@px; margin-right: 4*@px;
+}
+
+.xui-menubar div:hover > b {
+	color: @text-base; background: @border-color-mid;
+}
+
+.xui-menubar li:hover > b {
+    color: @text-base; background: @border-color-mid;
+}
+
+.xui-menubar li:last-child:hover > b {
+    border-radius: 0 0 @border-radius @border-radius;
+}
+
+.xui-menubar li:first-child:hover > b {
+    border-radius: 0 @border-radius 0 0;
+}
+
+.xui-menubar li ul li:first-child:hover > b {
+    border-radius: @border-radius @border-radius 0 0;
+}
+
+.xui-menubar li.sub-menu:before {
+	float: right; content: "\25BA"; color: @text-base; margin-top: 5*@px; margin-right: 6*@px;
+}
+
+.xui-menubar li:hover.sub-menu:before {
+	color: @text-base;
+}
+
+.xui-menubar div:hover > b + ul {
+    display: block;
+}
+
+.xui-menubar li:hover > ul {
+	display: block; left: @menu-item-width; top: -24*@px;
+	border-radius:  @border-radius;
+}
+
+.xui-menubar li:empty {
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    border-top: 1px solid rgba(0,0,0,0.2);
+}
+
+.xui-menubar li b:active {
+    animation: fast-blink 0.250s 1;
+}

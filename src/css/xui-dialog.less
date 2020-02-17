@@ -29,8 +29,8 @@
 .xui-dialog {
 	position: absolute; overflow: visible; font-size: 1rem; display: flex; flex-direction: column;
 	transform-style: preserve-3d; transform-origin: 50% 0%;
-	border: 1*@px solid @border-color; background: @background-base;
-	box-shadow: 0*@px 0*@px 12*@px @shadow-color-hard; border-radius: @border-radius;
+	border: 1px solid @border-color-lo; background: @background-base;
+	box-shadow: 0px 0px 12px @shadow-color-hard; border-radius: @border-radius;
 }
 
 .xui-dialog.maximized {
@@ -54,9 +54,10 @@
 /* HEADER */
 
 .xui-dialog > .header {
-	padding: 6*@px 12*@px; border-top: 1*@px solid @border-color-hi; border-bottom: 1*@px solid @border-color-lo;
+	padding: 5*@px 12*@px;
+	border-top: 1px solid @border-color-hi; border-bottom: 1px solid @border-color-mid;
 	background: linear-gradient(@base-color + #404040, @base-color + #303030);
-	box-shadow: 0*@px 2*@px 4*@px -2*@px @shadow-color-soft; border-radius: @border-radius @border-radius 0 0;
+	box-shadow: 0px 2px 4px -2px @shadow-color-soft; border-radius: @border-radius @border-radius 0 0;
 	user-select: none; flex: 0 0 auto;
 }
 
@@ -77,7 +78,7 @@
 }
 
 .xui-dialog > .header > span > i {
-	display: inline-block; padding: 7*@px 12*@px; font-size: 1rem; text-align: center;
+	display: inline-block; padding: 6*@px 12*@px; font-size: 1rem; text-align: center; font-style: normal;
 }
 
 .xui-dialog > .header > span > i:hover {
@@ -86,6 +87,14 @@
 
 .xui-dialog > .header > span > i:last-child {
 	border-radius: 0 @border-radius 0 0;
+}
+
+.xui-dialog > .header > span > i[data-action='restore'], .xui-dialog.maximized > .header > span > i[data-action='maximize'] {
+	display: none;
+}
+
+.xui-dialog.maximized > .header > span > i[data-action='restore'] {
+	display: inline-block;
 }
 
 /* ~ */

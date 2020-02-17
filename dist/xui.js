@@ -3348,10 +3348,14 @@ xui.register ('xui-dialog',
 		this.classList.add('hidden');
 	},
 
-	show: function()
+	maximize: function()
 	{
-		this.classList.remove('hidden');
-		this.classList.add('visible');
+		this.classList.add('maximized');
+	},
+
+	restore: function()
+	{
+		this.classList.remove('maximized');
 	}
 });
 

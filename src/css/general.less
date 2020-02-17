@@ -1,0 +1,77 @@
+/* ************************** */
+@keyframes fast-blink {
+	0% { background: #000; color: #fff; }
+	16.6% { background: #fff; color: #000; }
+	33.2% { background: #000; color: #fff; }
+	50% { background: #fff; color: #000; }
+	66.6% { background: #000; color: #fff; }
+	83.2% { background: #fff; color: #000; }
+	100% { background: #000; color: #fff; }
+}
+
+/* ************************** */
+.row {
+	display: flex;
+}
+
+.row > * {
+	width: 0; flex: 1 1 0;
+}
+
+
+/* ************************** */
+.input-group {
+    display: flex; overflow: hidden;
+	border: 1px solid @border-color-mid; background: @background-lighter;
+	box-shadow: inset 0px 4px 6px -5px @shadow-color-hard;
+	border-radius: @border-radius-smaller;
+}
+
+.input-group > input {
+	flex: 1 1 auto; background: none; border: none; padding: 5*@px 0 5*@px 8*@px; cursor: text;
+	color: @text-lighter; width: 0;
+}
+
+.input-group > span + input {
+	padding-left: 0;
+}
+
+.input-group > input:focus {
+	color: @text-base;
+}
+
+.input-group > span {
+	flex: 0 0 auto; font-style: normal; padding: 5*@px 8*@px;
+}
+
+.input-group > span:hover {
+    background: rgba(0,0,0,0.2);
+}
+
+
+/* ************************** */
+.btn {
+	display: inline-block; padding: 4*@px 8*@px; font-weight: normal;
+	border-radius: @border-radius;
+    color: #eee; text-shadow: 0px -1px 0px #1d2529;
+	background: linear-gradient(#7d8589,#5d6569);
+	border: 1px solid #2d3539;
+}
+
+.btn i {
+    margin-right: 4*@px;
+}
+
+.btn:hover {
+    box-shadow: 0px 0px 6px -2px #000;
+}
+
+.btn:active {
+    box-shadow: inset 0px 6px 6px -4px rgba(0,0,0,0.7);
+    background: linear-gradient(#5d6569,#7d8589);
+    color: #adb5b9;
+}
+
+.btn.sm {
+	padding: 3*@px 8*@px; font-size: 0.9rem;
+}

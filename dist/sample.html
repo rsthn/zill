@@ -10,16 +10,73 @@
 	<script src="https://kit.fontawesome.com/8162187dae.js" crossorigin="anonymous"></script>
 
 	<link rel="stylesheet" href="normalize.css" />
-	<link rel="stylesheet" href="xui.css" />
+	<link rel="stylesheet" href="xui.css?r=10" />
 	<link rel="stylesheet" href="font-default.css" />
 
 	<script src="xui.js"></script>
 </head>
 
 <body class="xui-app">
-<b id="x" style="text-align: center; display: block; color: red;">Hello</b>
+	<div class="xui-menubar">
+		<span>
+			<i class="fas fa-leaf"></i>
+			Levmap 2.0.3
+		</span>
 
-	<xui-dialog class="x-draggable" style="left: 50%; margin-left: -300px; top: 40px; width: 550px; height: 400px;">
+		<div>
+			<b>File</b>
+			<ul>
+				<li>
+					<b data-onclick="fileNew">
+						<i class="fas fa-plus"></i>
+						New
+					</b>
+				</li>
+
+				<li>
+					<b data-onclick="fileDownload">
+						<i class="fas fa-download"></i>
+						Download ...
+					</b>
+				</li>
+
+				<li>
+					<b data-onclick="fileLoad">
+						<i class="fas fa-upload"></i>
+						Load ...
+					</b>
+				</li>
+
+				<li>
+					<b data-onclick="fileExport">
+						<i class="fas fa-check"></i>
+						Export Layout ...
+					</b>
+				</li>
+			</ul>
+		</div>
+
+		<div>
+			<b>Window</b>
+			<ul>
+				<li><b data-onclick="showWindow: 'libTiles'">Tile Library</b></li>
+				<li><b data-onclick="showWindow: 'libAnims'">Animation Library</b></li>
+				<li><b data-onclick="showWindow: 'libObjects'">Object Library</b></li>
+				<li></li>
+				<li><b data-onclick="showWindow: 'layers'">Layers</b></li>
+				<li><b data-onclick="showWindow: 'objects'">Objects</b></li>
+				<li><b data-onclick="showWindow: 'attributes'">Attributes</b></li>
+			</ul>
+		</div>
+
+		<span class="right ch-ml-16">
+			<span><i class="fas fa-wrench"></i> Pointer (Zoom)</span>
+			<span><i class="fas fa-dot-circle"></i> t7_layout_maine</span>
+			<span><i class="fas fa-search"></i> 3.5x</span>
+		</span>
+	</div>
+
+	<xui-dialog class="x-draggable" style="left: 50%; margin-left: -300px; top: 40px; width: 750px; height: 400px;">
 
 		<div class="header">
 			<b><i class="fas fa-leaf"></i> Sample</b>
@@ -31,8 +88,14 @@
 
 		<div class="content p-8">
 
+			<div class="mb-16">
+				<button class="btn sm"><i class="fas fa-plus-circle"></i> Add Tiles</button>
+				<button class="btn sm"><i class="fas fa-plus-square"></i> Add Tiles from Spritesheet</button>
+			</div>
+
 			<div class="row ch-ml-4 ch-mr-4">
 				<div>
+					<label class="d-block mb-4">Primary Category:</label>
 					<xui-list class="x-scrollable" data-rows="5">
 						<span>Option 1
 							<em>12,12,45</em>
@@ -59,9 +122,17 @@
 						<span>Option 9</span>
 						<span>Option 10</span>
 					</xui-list>
+
+					<div class="input-group mt-6">
+						<input type="text" placeholder="Category Name"/>
+						<span>
+							<i class="fas fa-plus"></i>
+						</span>
+					</div>
 				</div>
 
 				<div>
+					<label class="d-block mb-4">Secondary Category:</label>
 					<xui-list class="x-scrollable" data-rows="5">
 						<span data-value='1'>Option 1</span>
 						<span data-value='2'>Option 2</span>
@@ -77,6 +148,7 @@
 				</div>
 
 				<div>
+					<label class="d-block mb-4">Group:</label>
 					<xui-list class="x-scrollable" data-rows="5">
 						<span>Option 1</span>
 						<span>Option 2</span>

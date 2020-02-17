@@ -4,9 +4,13 @@ The XUI toolkit was born because we at RedStar Technologies (RSTHN) like very mu
 
 ## Installation
 
-Preferably install XUI globally since it has a command line interface (CLI) to manage and initialize your projects.
+Preferably install XUI globally since it has a command line interface (CLI) to manage and initialize your projects, note that XUI requires
+Rin as peer dependency, which needs to be installed as well.
 
-`npm install -g @rsthn/xui`
+```sh
+npm install @rsthn/rin
+npm install -g @rsthn/xui --no-optional
+```
 
 ## Components
 

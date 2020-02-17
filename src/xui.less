@@ -12,6 +12,7 @@
 	.repeat(@list, @prefix, @prop, @sel, @i+1);
 }
 
+
 /* ************************** */
 html {
 	font-size: @font-size; line-height: (@font-size + 2px);
@@ -28,8 +29,10 @@ html {
 	cursor: if(@cursor="", default, e(%("url(%a) 2 2, auto", @cursor)));
 }
 
+
 /* ************************** */
 .repeat(@display-modes, d, display);
+
 
 /* ************************** */
 .repeatpx(@sizes, p, padding);
@@ -50,16 +53,12 @@ html {
 .repeatpx(@sizes, ch-mt, margin-top, ~'> *');
 .repeatpx(@sizes, ch-mb, margin-bottom, ~'> *');
 
+
 /* ************************** */
-.row {
-	display: flex;
-}
-
-.row > * {
-	flex: 1 1 0;
-}
-
 @import "./css/x-scrollable.less";
 
-@import "./css/dialog.less";
-@import "./css/list.less";
+@import "./css/general.less";
+
+@import "./css/xui-dialog.less";
+@import "./css/xui-list.less";
+@import "./css/xui-menubar.less";
