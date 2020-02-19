@@ -27,28 +27,28 @@
 			<b>File</b>
 			<ul>
 				<li>
-					<b data-onclick="fileNew">
+					<b data-action="fileNew">
 						<i class="fas fa-plus"></i>
 						New
 					</b>
 				</li>
 
 				<li>
-					<b data-onclick="fileDownload">
+					<b data-action="fileDownload">
 						<i class="fas fa-download"></i>
 						Download ...
 					</b>
 				</li>
 
 				<li>
-					<b data-onclick="fileLoad">
+					<b data-action="fileLoad">
 						<i class="fas fa-upload"></i>
 						Load ...
 					</b>
 				</li>
 
 				<li>
-					<b data-onclick="fileExport">
+					<b data-action="fileExport">
 						<i class="fas fa-check"></i>
 						Export Layout ...
 					</b>
@@ -89,8 +89,8 @@
 		<div class="content p-8">
 
 			<div class="mb-16">
-				<button class="btn sm"><i class="fas fa-plus-circle"></i> Add Tiles</button>
-				<button class="btn sm"><i class="fas fa-plus-square"></i> Add Tiles from Spritesheet</button>
+				<button class="btn sm"><i class="fas fa-plus-circle"></i> Add ...</button>
+				<button class="btn sm"><i class="fas fa-plus-square"></i> Add from Spritesheet ...</button>
 			</div>
 
 			<div class="row ch-ml-4 ch-mr-4">
@@ -132,24 +132,8 @@
 				</div>
 
 				<div>
-					<label class="d-block mb-4">Secondary Category:</label>
-					<xui-list class="x-scrollable" data-rows="5">
-						<span data-value='1'>Option 1</span>
-						<span data-value='2'>Option 2</span>
-						<span data-value='3'>Option 3</span>
-						<span data-value='4'>Option 4</span>
-						<span data-value='5'>Option 5</span>
-						<span data-value='6'>Option 6</span>
-						<span data-value='7'>Option 7</span>
-						<span data-value='8'>Option 8</span>
-						<span data-value='9'>Option 9</span>
-						<span data-value='10'>Option 10</span>
-					</xui-list>
-				</div>
-
-				<div>
 					<label class="d-block mb-4">Group:</label>
-					<xui-list class="x-scrollable" data-rows="5">
+					<xui-list class="x-scrollable my-items" data-rows="5">
 						<span>Option 1</span>
 						<span>Option 2</span>
 						<span>Option 3</span>
@@ -160,6 +144,90 @@
 				</div>
 			</div>
 
+			<br/>
+
+			<xui-context class="compact" data-target=".my-items > span">
+				<ul>
+					<li><em>Title</em></li>
+					<li><b>Awesome 1</b></li>
+					<li><b>Awesome 2</b></li>
+					<li></li>
+					<li><b>Awesome 3</b></li>
+					<!--<li><b>Lorem ipsum dolor sit amet, this is very nice and should work fine.</b></li>-->
+					<li class="sub-menu">
+						<b>Awesome 4</b>
+						<ul>
+							<li><b>Test 1</b></li>
+							<li><b>Test 1</b></li>
+							<li></li>
+							<li><b>Test 1</b></li>
+							<li><b>Test 1</b></li>
+							<li><b>Test 1</b></li>
+						</ul>
+					</li>
+					<li><b>Awesome 4</b></li>
+					<li><b>Awesome 4</b></li>
+					<li><b>Awesome 4</b></li>
+					<li><b>Awesome 4</b></li>
+					<li><b>Awesome 4</b></li>
+				</ul>
+			</xui-context>
+
+			<div class="xui-dropdown compact">
+				<b>General</b>
+				<ul>
+					<li><em>Title</em></li>
+					<li><b>Awesome 1</b></li>
+					<li><b>Awesome 2</b></li>
+					<li></li>
+					<li><b>Awesome 3</b></li>
+					<!--<li><b>Lorem ipsum dolor sit amet, this is very nice and should work fine.</b></li>-->
+					<li class="sub-menu">
+						<b>Awesome 4</b>
+						<ul>
+							<li><b>Test 1</b></li>
+							<li><b>Test 1</b></li>
+							<li></li>
+							<li><b>Test 1</b></li>
+							<li><b>Test 1</b></li>
+							<li><b>Test 1</b></li>
+						</ul>
+					</li>
+					<li><b>Awesome 4</b></li>
+					<li><b>Awesome 4</b></li>
+					<li><b>Awesome 4</b></li>
+					<li><b>Awesome 4</b></li>
+					<li><b>Awesome 4</b></li>
+				</ul>
+			</div>
+
+			<div class="xui-dropdown">
+				<b>General</b>
+				<ul>
+					<li><em>Title</em></li>
+					<li><b>Awesome 1</b></li>
+					<li><b><i class="fas fa-check"></i> Awesome 2</b></li>
+					<li></li>
+					<li><b>Awesome 3</b></li>
+					<li><b>Awesome 4</b></li>
+					<li class="sub-menu">
+						<b>Awesome 4</b>
+						<ul>
+							<li><b>Test 1</b></li>
+							<li><b>Test 1</b></li>
+							<li></li>
+							<li><b>Test 1</b></li>
+							<li><b>Test 1</b></li>
+							<li><b>Test 1</b></li>
+						</ul>
+					</li>
+					<li><b>Awesome 4</b></li>
+					<li><b>Awesome 4</b></li>
+					<li><b>Awesome 4</b></li>
+					<li><b>Awesome 4</b></li>
+					<li><b>Awesome 4</b></li>
+				</ul>
+			</div>
 		</div>
 
 	</xui-dialog>

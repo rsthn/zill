@@ -1,5 +1,1588 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 /*
+**	rin/api
+**
+**	Copyright (c) 2013-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+const base64 = require('base-64');
+
+if (!('fetch' in globalThis))
+	var fetch = require('node-fetch');
+
+/**
+**	API interface utility functions.
+*/
+
+module.exports =
+{
+	/**
+	**	Target URL for all the API requests.
+	*/
+	apiUrl: "/api",
+
+	/**
+	**	Indicates if all request data will be packed into a _req64 parameter instead of individual fields.
+	*/
+	useReq64: false,
+
+	/**
+	**	Number of retries to execute each API call before giving up and invoking error handlers.
+	*/
+	retries: 1,
+
+	/**
+	**	Level of the current request. Used to detect nested requests.
+	*/
+	_requestLevel: 0,
+
+	/**
+	**	Indicates if all API calls should be bundled in a request package. Activated by calling the packageBegin() function and finished with packageEnd().
+	*/
+	_requestPackage: 0,
+
+	/**
+	**	When in package-mode, this contains the package data to be sent upon a call to packageEnd().
+	*/
+	_packageData: [],
+
+	/**
+	**	Overridable filter that processes the response from the server and returns true if it was successful.
+	*/
+	responseFilter: function (res, req)
+	{
+		if (res.response == 408 && globalThis.location)
+		{
+			globalThis.location.reload();
+			return false;
+		}
+
+		return true;
+	},
+
+	/**
+	**	Sets the API functions to package-mode and bundles requests together.
+	*/
+	packageBegin: function ()
+	{
+		this._requestPackage++;
+	},
+
+	/**
+	**	Sends a single API request with the currently constructed package and finishes package-mode.
+	*/
+	packageEnd: function ()
+	{
+		if (!this._requestPackage)
+			return;
+
+		if (--this._requestPackage)
+			return;
+
+		this.packageSend();
+	},
+
+	/**
+	**	Sends a single API request with the currently constructed package and maintains package-mode.
+	*/
+	packageSend: function ()
+	{
+		if (!this._packageData.length)
+			return;
+
+		let _packageData = this._packageData;
+		this._packageData = [];
+
+		var rpkg = "";
+
+		for (var i = 0; i < _packageData.length; i++)
+		{
+			rpkg += "r"+i+","+base64.encode(this.encodeParams(_packageData[i][2]))+";";
+		}
+
+		this._showProgress();
+
+		this.post(
+			{ rpkg: rpkg },
+
+			(res, req) =>
+			{
+				for (let i = 0; i < _packageData.length; i++)
+				{
+					try
+					{
+						var response = res["r"+i];
+						if (!response)
+						{
+							if (_packageData[i][1] != null) _packageData[i][1] (_packageData[i][2]);
+							continue;
+						}
+
+						if (_packageData[i][0] != null)
+						{
+							if (this.responseFilter (response, _packageData[i][2]))
+							{
+								_packageData[i][0] (response, _packageData[i][2]);
+							}
+						}
+					}
+					catch (e) {
+					}
+				}
+			},
+
+			(req) =>
+			{
+				for (let i = 0; i < _packageData.length; i++)
+				{
+					if (_packageData[i][1] != null) _packageData[i][1] (_packageData[i][2]);
+				}
+			}
+		);
+	},
+
+	/**
+	**	Adds CSS class 'busy' to the HTML root element, works only if running inside a browser.
+	*/
+	_showProgress: function ()
+	{
+		if ('document' in globalThis) {
+			this._requestLevel++;
+			if (this._requestLevel > 0) globalThis.document.documentElement.classList.add('busy');
+		}
+	},
+
+	/**
+	**	Removes the 'busy' CSS class from the HTML element.
+	*/
+	_hideProgress: function ()
+	{
+		if ('document' in globalThis) {
+			this._requestLevel--;
+			if (!this._requestLevel) globalThis.document.documentElement.classList.remove('busy');
+		}
+	},
+
+	/**
+	**	Returns a parameter string for a GET request given an object with fields.
+	*/
+	encodeParams: function (obj)
+	{
+		let s = [];
+
+		for (let i in obj)
+			s.push(encodeURIComponent(i) + '=' + encodeURIComponent(obj[i]));
+
+		return s.join('&');
+	},
+
+	/**
+	**	Executes an API call to the URL stored in apiUrl.
+	*/
+	apiCall: function (params, success, failure, type, retries)
+	{
+		let url = this.apiUrl;
+
+		if (type != 'GET' && type != 'POST')
+			type = 'auto';
+
+		if (this._requestPackage)
+		{
+			this._packageData.push([success, failure, params]);
+			return;
+		}
+
+		this._showProgress();
+
+		let request = params;
+		params = this.encodeParams(params);
+
+		if (type == 'auto' && !this.useReq64 /*&& !(params instanceof FormData)*/)
+		{
+			type = params.length < 960 ? 'GET' : type;
+		}
+
+		if (retries === undefined)
+			retries = this.retries;
+
+		if (type == 'auto') type = 'POST';
+
+		if (this.useReq64 /* && !(params instanceof FormData) */)
+			params = "_req64=" + base64.encode(params);
+
+		(type == 'GET' ? fetch(url + '?_=' + Date.now() + '&' + params) : fetch(url, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, method: 'POST', body: params }))
+		.then(result => result.json())
+		.then(result =>
+		{
+			this._hideProgress();
+			if (!success) return
+
+			if (this.responseFilter(result, request))
+				success(result, request);
+		})
+		.catch(err =>
+		{
+			this._hideProgress();
+
+			if (retries == 0) {
+				if (failure) failure(request);
+			} else {
+				this.apiCall (request, success, failure, type, retries-1);
+			}
+		});
+	},
+
+	/**
+	**	Executes a POST API call.
+	*/
+	post: function (params, success, failure)
+	{
+		return this.apiCall(params, success, failure, 'POST');
+	},
+
+	/**
+	**	Executes a GET API call.
+	*/
+	get: function (params, success, failure)
+	{
+		return this.apiCall(params, success, failure, 'GET');
+	},
+
+	/**
+	**	Executes an automatic API call, returns a promise.
+	*/
+	fetch: function (params)
+	{
+		return new Promise((resolve, reject) => {
+			this.apiCall(params, resolve, reject);
+		});
+	}
+};
+
+},{"base-64":4,"node-fetch":5}],2:[function(require,module,exports){
+/*
+**	rin/element
+**
+**	Copyright (c) 2013-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+const { Rin, Model, Template } = require('@rsthn/rin');
+
+/*
+**	Base class for custom elements.
+*/
+
+const Element = module.exports = 
+{
+	/**
+	**	Map containing the original prototypes for all registered elements.
+	*/
+	protos: { },
+
+	/**
+	**	Indicates if the element is a root element, that is, the target element to attach elements having data-ref attribute.
+	*/
+	isRoot: false,
+
+	/**
+	**	Model type (class) for the element's model.
+	*/
+	modelt: Model,
+
+	/**
+	**	Data model related to the element.
+	*/
+	model: null,
+
+	/**
+	**	Events map.
+	*/
+	events: null,
+
+	/**
+	**	Element constructor.
+	*/
+	__ctor: function()
+	{
+		if (this.events)
+			this.bindEvents (this.events);
+
+		this._list_watch = [];
+		this._list_visible = [];
+		this._list_property = [];
+
+		this.init();
+
+		Object.keys(this._super).reverse().forEach(i =>
+		{
+			if ('init' in this._super[i])
+				this._super[i].init();
+		});
+
+		this.collectWatchers();
+	},
+
+	/**
+	**	Initializes the element. Called after construction of the instance.
+	**
+	**	>> void init();
+	*/
+	init: function()
+	{
+	},
+
+	/**
+	**	Sets the model of the element and executes the modelChanged event handler.
+	**
+	**	>> Element setModel (Model model);
+	*/
+	setModel: function (model)
+	{
+		if (!model) return this;
+
+		if (!(model instanceof this.modelt))
+			model = new this.modelt (model);
+
+		if (this.model != null)
+		{
+			this.model.removeEventListener ("modelChanged", this.onModelPreChanged, this);
+			this.model.removeEventListener ("propertyChanging", this.onModelPropertyChanging, this);
+			this.model.removeEventListener ("propertyChanged", this.onModelPropertyPreChanged, this);
+			this.model.removeEventListener ("propertyRemoved", this.onModelPropertyRemoved, this);
+		}
+
+		this.model = model;
+
+		this.model.addEventListener ("modelChanged", this.onModelPreChanged, this);
+		this.model.addEventListener ("propertyChanging", this.onModelPropertyChanging, this);
+		this.model.addEventListener ("propertyChanged", this.onModelPropertyPreChanged, this);
+		this.model.addEventListener ("propertyRemoved", this.onModelPropertyRemoved, this);
+
+		this.onModelPreChanged(null, { fields: Object.keys(this.model.properties) });
+		return this;
+	},
+
+	/**
+	**	Returns the model of the element. This is a dummy function returning the public attribute "model" of this class.
+	**
+	**	>> Model getModel();
+	*/
+	getModel: function ()
+	{
+		return this.model;
+	},
+
+	/*
+	**	Returns the width of the element.
+	**
+	**	>> float getWidth([elem]);
+	*/
+	getWidth: function (elem)
+	{
+		return (elem || this).getBoundingClientRect().width;
+	},
+
+	/*
+	**	Returns the height of the element.
+	**
+	**	>> float getHeight([elem]);
+	*/
+	getHeight: function (elem)
+	{
+		return (elem || this).getBoundingClientRect().height;
+	},
+
+	/**
+	**	Binds all events in the specified map to the element, the events map can have one of the following forms:
+	**
+	**		"click .button": "doSomething",		(Delegated Event)
+	**		"click .button": function() { },	(Delegated Event)
+	**		"myevt @this": "...",				(Element Event)
+	**		"myevt": "...",						(Element Event)
+	**		"myevt @objName": "...",			(Element Event)
+	**		"#propname": "...",					(Property Changed Event)
+	**		"keyup(10) .input": "..."			(Delegated Event with Parameters)
+	**
+	**	>> Element bindEvents (object events);
+	*/
+	bindEvents: function (events)
+	{
+		for (var evtstr in events)
+		{
+			let hdl = events[evtstr];
+
+			if (Rin.typeOf(hdl) == 'string')
+				hdl = this[hdl];
+
+			hdl = hdl.bind(this);
+
+			var i = evtstr.indexOf(" ");
+
+			var name = i == -1 ? evtstr : evtstr.substr(0, i);
+			var selector = i == -1 ? "" : evtstr.substr(i + 1);
+
+			var args = null;
+
+			var j = name.indexOf("(");
+			if (j != -1)
+			{
+				args = name.substr(j+1, name.length-j-2).split(",");
+				name = name.substr(0, j);
+			}
+
+			if (selector.substr(0,1) == "@")
+			{
+				if (selector.substr(1) == "this")
+				{
+					this.listen(name, hdl);
+				}
+				else
+					this[selector.substr(1)].addEventListener(name, hdl);
+
+				continue;
+			}
+
+			if (name.substr(0, 1) == "#")
+			{
+				this.listen("propertyChanged."+name.substr(1), hdl);
+				continue;
+			}
+
+			if (args != null)
+			{
+				switch (name)
+				{
+					case "keyup": case "keydown":
+						this.listen (name, selector, function (evt, args)
+						{
+							if (Rin.indexOf(args, evt.keyCode.toString()) != -1)
+								return hdl (evt, args);
+						});
+						continue;
+				}
+			}
+
+			this.listen (name, selector, hdl);
+		}
+
+		return this;
+	},
+
+	/**
+	**	Listens for an event for elements matching the specified selector, returns an object with a single method remove() used
+	**	to remove the listener when it is no longer needed.
+	**
+	**	>> object listen (string eventName, string selector, function handler);
+	**	>> object listen (string eventName, function handler);
+	*/
+	listen: function (eventName, selector, handler)
+	{
+		if (Rin.typeOf(selector) == "function")
+		{
+			handler = selector;
+			selector = null;
+		}
+
+		let callback = null;
+		let self = this;
+
+		this.addEventListener (eventName, callback = (evt) =>
+		{
+			let result = true;
+
+			if (selector && selector != "*")
+			{
+				let elems = this.querySelectorAll(selector);
+
+				evt.source = evt.target;
+
+				while (evt.source !== this)
+				{
+					let i = Rin.indexOf(elems, evt.source);
+					if (i !== null)
+					{
+						result = handler.call (this, evt, evt.detail);
+						break;
+					}
+					else
+					{
+						evt.source = evt.source.parentElement;
+					}
+				}
+			}
+			else
+			{
+				result = handler.call (this, evt, evt.detail);
+			}
+
+			if (result !== true)
+			{
+				evt.preventDefault();
+				evt.stopPropagation();
+			}
+		});
+
+		return { removed: false, remove: function() { if (this.removed) return; this.removed = true; self.removeEventListener(eventName, callback); } };
+	},
+
+	/**
+	**	Dispatches a new event with the specified name and the given arguments.
+	**
+	**	>> void dispatch (string eventName, object args);
+	*/
+	dispatch: function (eventName, args)
+	{
+		this.dispatchEvent (new CustomEvent (eventName, { bubbles: true, detail: args }));
+	},
+
+	/**
+	**	Sets the innerHTML property of the element and runs some post set-content tasks.
+	**
+	**	>> void setInnerHTML (value);
+	*/
+	setInnerHTML: function (value)
+	{
+		this.innerHTML = value;
+		this.collectWatchers ();
+	},
+
+	/**
+	**	Collects all watchers elements (data-watch, data-visible, data-property), that depend on the model, should be invoked
+	**	when the structure of the element changed (added/removed children). This is automatically called when the setInnerHTML
+	**	method is called.
+	**
+	**	>> void collectWatchers ();
+	*/
+	collectWatchers: function ()
+	{
+		let self = this;
+		let modified = false;
+		let list;
+
+		let _list_watch_length = this._list_watch.length;
+		let _list_visible_length = this._list_visible.length;
+		let _list_property_length = this._list_property.length;
+
+		list = this.querySelectorAll("[data-watch]");
+		for (let i = 0; i < list.length; i++)
+		{
+			list[i]._template = Template.compile(list[i].innerHTML);
+			list[i]._watch = new RegExp(list[i].dataset.watch);
+			list[i].innerHTML = '';
+
+			list[i].removeAttribute('data-watch');
+			this._list_watch.push(list[i]);
+		}
+
+		list = this.querySelectorAll("[data-visible]");
+		for (let i = 0; i < list.length; i++)
+		{
+			list[i]._visible = Template.compile(list[i].dataset.visible);
+
+			list[i].removeAttribute('data-visible');
+			this._list_visible.push(list[i]);
+		}
+
+		list = this.querySelectorAll("[data-property]");
+		for (let i = 0; i < list.length; i++)
+		{
+			list[i].onchange = function()
+			{
+				switch (this.type)
+				{
+					case 'checkbox':
+						self.getModel().set(this.name, this.checked ? '1' : '0');
+						break;
+
+					case 'field':
+						self.getModel().set(this.name, this.getValue());
+						break;
+
+					default:
+						self.getModel().set(this.name, this.value);
+						break;
+				}
+			};
+
+			list[i].name = list[i].dataset.property;
+
+			list[i].removeAttribute('data-property');
+			this._list_property.push(list[i]);
+		}
+
+		this._list_watch = this._list_watch.filter(i => i.parentElement != null);
+		if (_list_watch_length != this._list_watch.length) modified = true;
+
+		this._list_visible = this._list_visible.filter(i => i.parentElement != null);
+		if (_list_visible_length != this._list_visible.length) modified = true;
+
+		this._list_property = this._list_property.filter(i => i.parentElement != null);
+		if (_list_property_length != this._list_property.length) modified = true;
+
+		if (this.model != null && modified)
+			this.model.update();
+	},
+
+	/**
+	**	Executed when the element is created and yet not attached to the DOM tree.
+	**
+	**	>> void onCreated ();
+	*/
+	onCreated: function()
+	{
+	},
+
+	/**
+	**	Executed when the element is attached to the DOM tree.
+	**
+	**	>> void onConnected ();
+	*/
+	onConnected: function()
+	{
+	},
+
+	/**
+	**	Executed when the element is no longer a part of the DOM tree.
+	**
+	**	>> void onDisconnected ();
+	*/
+	onDisconnected: function()
+	{
+	},
+
+	/**
+	**	Executed on the root element when a child element has data-ref attribute and it was added to the root.
+	**
+	**	>> void onRefAdded (string name);
+	*/
+	onRefAdded: function (name)
+	{
+	},
+
+	/**
+	**	Executed on the root element when a child element has data-ref attribute and it was removed from the root.
+	**
+	**	>> void onRefRemoved (string name);
+	*/
+	onRefRemoved: function (name)
+	{
+	},
+
+	/**
+	**	Event handler invoked when the model has changed, executed before onModelChanged() to update internal dependencies,
+	**	should not be overriden or elements watching the model will not be updated.
+	**
+	**	>> void onModelPreChanged (evt, args);
+	*/
+	onModelPreChanged: function (evt, args)
+	{
+		let data = this.getModel().get();
+
+		for (let i = 0; i < this._list_watch.length; i++)
+		{
+			for (let j of args.fields)
+			{
+				if (!this._list_watch[i]._watch.test(j))
+					continue;
+
+				this._list_watch[i].innerHTML = this._list_watch[i]._template(data);
+				break;
+			}
+		}
+
+		for (let i = 0; i < this._list_visible.length; i++)
+		{
+			if (this._list_visible[i]._visible(data, 'arg'))
+				this._list_visible[i].style.display = 'block';
+			else
+				this._list_visible[i].style.display = 'none';
+		}
+
+		this.onModelChanged(evt, args);
+	},
+
+	/**
+	**	Event handler invoked when the model has changed.
+	**
+	**	>> void onModelChanged (evt, args);
+	*/
+	onModelChanged: function (evt, args)
+	{
+	},
+
+	/**
+	**	Event handler invoked when a property of the model is changing.
+	**
+	**	>> void onModelPropertyChanging (evt, args);
+	*/
+	onModelPropertyChanging: function (evt, args)
+	{
+	},
+
+	/**
+	**	Event handler invoked when a property of the model has changed, executed before onModelPropertyChanged() to update internal
+	**	dependencies, should not be overriden or elements depending on the property will not be updated.
+	**
+	**	>> void onModelPropertyPreChanged (evt, args);
+	*/
+	onModelPropertyPreChanged: function (evt, args)
+	{
+		for (let i = 0; i < this._list_property.length; i++)
+		{
+			if (this._list_property[i].name == args.name)
+			{
+				let trigger = true;
+
+				switch (this._list_property[i].type)
+				{
+					case 'radio':
+						if (this._list_property[i].value != args.value)
+						{
+							this._list_property[i].parentElement.classList.remove('active');
+							continue;
+						}
+
+						this._list_property[i].checked = true;
+						this._list_property[i].parentElement.classList.add('active');
+						break;
+
+					case 'checkbox':
+						if (~~args.value)
+						{
+							this._list_property[i].checked = true;
+							this._list_property[i].parentElement.classList.add('active');
+						}
+						else
+						{
+							this._list_property[i].checked = false;
+							this._list_property[i].parentElement.classList.remove('active');
+						}
+
+						break;
+
+					case 'field':
+						this._list_property[i].setValue (args.value);
+						trigger = false;
+						break;
+
+					default:
+						this._list_property[i].value = args.value;
+						break;
+				}
+
+				if (trigger && this._list_property[i].onchange)
+					this._list_property[i].onchange();
+			}
+		}
+
+		this.onModelPropertyChanged(evt, args);
+	},
+
+	/**
+	**	Event handler invoked when a property of the model has changed. Automatically triggers an
+	**	internal event named "propertyChanged.<propertyName>".
+	**
+	**	>> void onModelPropertyChanged (evt, args);
+	*/
+	onModelPropertyChanged: function (evt, args)
+	{
+		this.dispatch ("propertyChanged." + args.name, args);
+		this.dispatch ("propertyChanged", args);
+	},
+
+	/**
+	**	Event handler invoked when a property of the model is removed.
+	**
+	**	>> void onModelPropertyRemoved (evt, args);
+	*/
+	onModelPropertyRemoved: function (evt, args)
+	{
+	},
+
+	/*
+	**	Registers a new custom element with the specified name, extra functionality can be added with one or more prototypes, by default
+	**	all elements also get the Rin.Element prototype. Note that the final prototypes of all registered elements are stored, and
+	**	if you want to inherit another element's prototype just provide its name (string) in the protos argument list.
+	**
+	**	>> class register (string name, (object|string)... protos);
+	*/
+	register: function (name, ...protos)
+	{
+		var newElement = class extends HTMLElement
+		{
+			constructor()
+			{
+				super();
+				this.invokeConstructor = true;
+
+				this._super = { };
+
+				for (let i of Object.entries(this.constructor.prototype._super))
+				{
+					this._super[i[0]] = { };
+
+					for (let j of Object.entries(i[1])) {
+						this._super[i[0]][j[0]] = j[1].bind(this);
+					}
+				}
+
+				this.onCreated();
+			}
+
+			findRoot()
+			{
+				let elem = this.parentElement;
+
+				while (elem != null)
+				{
+					if ("isRoot" in elem && elem.isRoot)
+						return elem;
+
+					elem = elem.parentElement;
+				}
+
+				return globalThis;
+			}
+
+			connectedCallback()
+			{
+				if (this.dataset.ref)
+				{
+					let root = this.findRoot();
+					if (root)
+					{
+						root[this.dataset.ref] = this;
+						this.root = root;
+					}
+				}
+
+				if (this.invokeConstructor)
+				{
+					this.invokeConstructor = false;
+					this.__ctor();
+				}
+
+				if (this.root)
+					this.root.onRefAdded (this.dataset.ref);
+
+				this.onConnected();
+			}
+
+			disconnectedCallback()
+			{
+				if (this.dataset.ref && this.root)
+				{
+					this.root.onRefRemoved (this.dataset.ref);
+
+					root[this.dataset.ref] = null;
+					this.root = null;
+				}
+
+				this.onDisconnected();
+			}
+		};
+
+		Rin.override (newElement.prototype, Element);
+
+		const proto = { };
+		const _super = { };
+
+		for (let i = 0; i < protos.length; i++)
+		{
+			if (!protos[i]) continue;
+
+			if (Rin.typeOf(protos[i]) == 'string')
+			{
+				const name = protos[i];
+
+				protos[i] = Element.protos[name];
+				if (!protos[i]) continue;
+
+				_super[name] = { };
+
+				for (let f in protos[i])
+				{
+					if (Rin.typeOf(protos[i][f]) != 'function')
+						continue;
+
+					_super[name][f] = protos[i][f];
+				}
+			}
+
+			if ('_super' in protos[i])
+				Rin.override (_super, protos[i]._super);
+
+			Rin.override (newElement.prototype, protos[i]);
+			Rin.override (proto, protos[i]);
+		}
+
+		newElement.prototype._super = _super;
+		proto._super = _super;
+
+		customElements.define (name, newElement);
+		Element.protos[name] = proto;
+
+		return newElement;
+	}
+};
+
+},{"@rsthn/rin":12}],3:[function(require,module,exports){
+/*
+**	rin-front/main
+**
+**	Copyright (c) 2013-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+module.exports =
+{
+	Router: require('./router'),
+	Element: require('./element'),
+	Api: require('./api')
+};
+
+},{"./api":1,"./element":2,"./router":6}],4:[function(require,module,exports){
+(function (global){
+/*! http://mths.be/base64 v0.1.0 by @mathias | MIT license */
+;(function(root) {
+
+	// Detect free variables `exports`.
+	var freeExports = typeof exports == 'object' && exports;
+
+	// Detect free variable `module`.
+	var freeModule = typeof module == 'object' && module &&
+		module.exports == freeExports && module;
+
+	// Detect free variable `global`, from Node.js or Browserified code, and use
+	// it as `root`.
+	var freeGlobal = typeof global == 'object' && global;
+	if (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal) {
+		root = freeGlobal;
+	}
+
+	/*--------------------------------------------------------------------------*/
+
+	var InvalidCharacterError = function(message) {
+		this.message = message;
+	};
+	InvalidCharacterError.prototype = new Error;
+	InvalidCharacterError.prototype.name = 'InvalidCharacterError';
+
+	var error = function(message) {
+		// Note: the error messages used throughout this file match those used by
+		// the native `atob`/`btoa` implementation in Chromium.
+		throw new InvalidCharacterError(message);
+	};
+
+	var TABLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+	// http://whatwg.org/html/common-microsyntaxes.html#space-character
+	var REGEX_SPACE_CHARACTERS = /[\t\n\f\r ]/g;
+
+	// `decode` is designed to be fully compatible with `atob` as described in the
+	// HTML Standard. http://whatwg.org/html/webappapis.html#dom-windowbase64-atob
+	// The optimized base64-decoding algorithm used is based on @atk’s excellent
+	// implementation. https://gist.github.com/atk/1020396
+	var decode = function(input) {
+		input = String(input)
+			.replace(REGEX_SPACE_CHARACTERS, '');
+		var length = input.length;
+		if (length % 4 == 0) {
+			input = input.replace(/==?$/, '');
+			length = input.length;
+		}
+		if (
+			length % 4 == 1 ||
+			// http://whatwg.org/C#alphanumeric-ascii-characters
+			/[^+a-zA-Z0-9/]/.test(input)
+		) {
+			error(
+				'Invalid character: the string to be decoded is not correctly encoded.'
+			);
+		}
+		var bitCounter = 0;
+		var bitStorage;
+		var buffer;
+		var output = '';
+		var position = -1;
+		while (++position < length) {
+			buffer = TABLE.indexOf(input.charAt(position));
+			bitStorage = bitCounter % 4 ? bitStorage * 64 + buffer : buffer;
+			// Unless this is the first of a group of 4 characters…
+			if (bitCounter++ % 4) {
+				// …convert the first 8 bits to a single ASCII character.
+				output += String.fromCharCode(
+					0xFF & bitStorage >> (-2 * bitCounter & 6)
+				);
+			}
+		}
+		return output;
+	};
+
+	// `encode` is designed to be fully compatible with `btoa` as described in the
+	// HTML Standard: http://whatwg.org/html/webappapis.html#dom-windowbase64-btoa
+	var encode = function(input) {
+		input = String(input);
+		if (/[^\0-\xFF]/.test(input)) {
+			// Note: no need to special-case astral symbols here, as surrogates are
+			// matched, and the input is supposed to only contain ASCII anyway.
+			error(
+				'The string to be encoded contains characters outside of the ' +
+				'Latin1 range.'
+			);
+		}
+		var padding = input.length % 3;
+		var output = '';
+		var position = -1;
+		var a;
+		var b;
+		var c;
+		var d;
+		var buffer;
+		// Make sure any padding is handled outside of the loop.
+		var length = input.length - padding;
+
+		while (++position < length) {
+			// Read three bytes, i.e. 24 bits.
+			a = input.charCodeAt(position) << 16;
+			b = input.charCodeAt(++position) << 8;
+			c = input.charCodeAt(++position);
+			buffer = a + b + c;
+			// Turn the 24 bits into four chunks of 6 bits each, and append the
+			// matching character for each of them to the output.
+			output += (
+				TABLE.charAt(buffer >> 18 & 0x3F) +
+				TABLE.charAt(buffer >> 12 & 0x3F) +
+				TABLE.charAt(buffer >> 6 & 0x3F) +
+				TABLE.charAt(buffer & 0x3F)
+			);
+		}
+
+		if (padding == 2) {
+			a = input.charCodeAt(position) << 8;
+			b = input.charCodeAt(++position);
+			buffer = a + b;
+			output += (
+				TABLE.charAt(buffer >> 10) +
+				TABLE.charAt((buffer >> 4) & 0x3F) +
+				TABLE.charAt((buffer << 2) & 0x3F) +
+				'='
+			);
+		} else if (padding == 1) {
+			buffer = input.charCodeAt(position);
+			output += (
+				TABLE.charAt(buffer >> 2) +
+				TABLE.charAt((buffer << 4) & 0x3F) +
+				'=='
+			);
+		}
+
+		return output;
+	};
+
+	var base64 = {
+		'encode': encode,
+		'decode': decode,
+		'version': '0.1.0'
+	};
+
+	// Some AMD build optimizers, like r.js, check for specific condition patterns
+	// like the following:
+	if (
+		typeof define == 'function' &&
+		typeof define.amd == 'object' &&
+		define.amd
+	) {
+		define(function() {
+			return base64;
+		});
+	}	else if (freeExports && !freeExports.nodeType) {
+		if (freeModule) { // in Node.js or RingoJS v0.8.0+
+			freeModule.exports = base64;
+		} else { // in Narwhal or RingoJS v0.7.0-
+			for (var key in base64) {
+				base64.hasOwnProperty(key) && (freeExports[key] = base64[key]);
+			}
+		}
+	} else { // in Rhino or a web browser
+		root.base64 = base64;
+	}
+
+}(this));
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],5:[function(require,module,exports){
+(function (global){
+"use strict";
+
+// ref: https://github.com/tc39/proposal-global
+var getGlobal = function () {
+	// the only reliable means to get the global object is
+	// `Function('return this')()`
+	// However, this causes CSP violations in Chrome apps.
+	if (typeof self !== 'undefined') { return self; }
+	if (typeof window !== 'undefined') { return window; }
+	if (typeof global !== 'undefined') { return global; }
+	throw new Error('unable to locate global object');
+}
+
+var global = getGlobal();
+
+module.exports = exports = global.fetch;
+
+// Needed for TypeScript and Webpack.
+exports.default = global.fetch.bind(global);
+
+exports.Headers = global.Headers;
+exports.Request = global.Request;
+exports.Response = global.Response;
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],6:[function(require,module,exports){
+/*
+**	rin/router
+**
+**	Copyright (c) 2013-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+const { EventDispatcher } = require('@rsthn/rin');
+
+/**
+**	The Router is a special module that detects local URL changes (when a hash-change occurs) and
+**	forwards events to the appropriate handlers.
+*/
+
+let _Router = module.exports =
+{
+	Route: EventDispatcher.extend
+	({
+		/**
+		**	Regular expression for the route. This is generated from a simpler expression provided
+		**	in the constructor.
+		*/
+		routeRegex: null,
+	
+		/**
+		**	Original route string value.
+		*/
+		value: null,
+	
+		/**
+		**	Map with the indices and the names of each paremeter obtained from the route expression.
+		*/
+		params: null,
+	
+		/**
+		**	Arguments string obtained from the last route dispatch. Used to check if the arguments changed.
+		*/
+		s_args: null,
+	
+		/**
+		**	Indicates if the route is active because of a past positive dispatch.
+		*/
+		active: false,
+	
+		/**
+		**	Indicates if the route is active because of a past positive dispatch.
+		*/
+		changed: false,
+	
+		/**
+		**	Constructor of the route, the specified argument is a route expression.
+		**
+		**	>> void __ctor (string route);
+		*/
+		__ctor: function (route)
+		{
+			this._super.EventDispatcher.__ctor();
+			this._compileRoute (this.value = route);
+		},
+	
+		/**
+		**	Transforms the specified route expression into a regular expression and a set of parameter
+		**	names and stores them in the 'param' array.
+		**
+		**	>> void _compileRoute (string route);
+		*/
+		_compileRoute: function (route)
+		{
+			this.params = [];
+	
+			while (true)
+			{
+				var m = /:([!@A-Za-z0-9_-]+)/.exec(route);
+				if (!m) break;
+	
+				route = route.replace(m[0], "([^/]+)");
+				this.params.push (m[1]);
+			}
+	
+			this.routeRegex = "^" + route.replace(/##/g, "");
+		},
+	
+		/**
+		**	Adds a handler to the route dispatcher. The handler can be removed later using removeHandler and
+		**	specifying the same parameters. If unrouted boolean is specified the event to listen to will be
+		**	the unrouted event (when the route changes and the route is not activated).
+		**
+		**	void addHandler (handler: function, unrouted: bool);
+		*/
+		addHandler: function (handler, unrouted)
+		{
+			this.addEventListener ((unrouted === true ? "un" : "") + "routed", handler, null);
+		},
+	
+		/**
+		**	Removes a handler from the route dispatcher.
+		**
+		**	void removeHandler (handler: function, unrouted: bool);
+		*/
+		removeHandler: function (handler, unrouted)
+		{
+			this.removeEventListener ((unrouted === true ? "un" : "") + "routed", handler, null);
+		},
+	
+		/**
+		**	Verifies if the specified route matches the internal route and if so dispatches a "routed"
+		**	event with the obtained parameters to all attached handlers.
+		**
+		**	bool dispatch (route: string);
+		*/
+		dispatch: function (route)
+		{
+			var matches = route.match (this.routeRegex);
+			if (!matches)
+			{
+				this.s_args = null;
+	
+				if (this.active)
+					this.dispatchEvent ("unrouted", { route: this });
+	
+				return this.active = false;
+			}
+	
+			var args = { route: this };
+			var str = "";
+	
+			for (var i = 0; i < this.params.length; i++)
+			{
+				args[this.params[i]] = matches[i+1];
+				str += "_" + matches[i+1];
+			}
+	
+			this.changed = str != this.s_args;
+	
+			this.dispatchEvent ("routed", args);
+			this.s_args = str;
+	
+			return this.active = true;
+		}
+	}),
+
+	/**
+	**	Map with route objects. The key of the map is the route and the value a handler.
+	*/
+	routes: { },
+
+	/**
+	**	Sorted list of routes. Smaller routes are processed first than larger ones. This array stores
+	**	only the keys to the Router.routes map.
+	*/
+	sortedRoutes: [ ],
+
+	/**
+	**	Indicates the number of times the onLocationChanged handler should ignore the hash change event.
+	*/
+	ignoreHashchangeEvent: 0,
+
+	/**
+	**	Current location.
+	*/
+	location: "",
+
+	/**
+	**	Current location as an array of elements (obtained by splitting the location by slash).
+	*/
+	args: [],
+
+	/**
+	**	Initializes the router global instance.
+	**
+	**	>> void init ();
+	*/
+	init: function ()
+	{
+		if (this.alreadyAttached)
+			return;
+
+		this.alreadyAttached = true;
+
+		if ('onhashchange' in globalThis)
+			globalThis.onhashchange = this.onLocationChanged.bind(this);
+	},
+
+	/**
+	**	Refreshes the current route by forcing a hashchange event.
+	**
+	**	>> void refresh ();
+	*/
+	refresh: function ()
+	{
+		this.onLocationChanged();
+	},
+
+	/**
+	**	Changes the current location and optionally prevents a trigger of the hashchange event.
+	**
+	**	>> void setRoute (string route[, bool silent]);
+	*/
+	setRoute: function (route, silent)
+	{
+		var location = _Router.realLocation (route);
+		if (location == this.location) return;
+
+		if (silent) this.ignoreHashchangeEvent++;
+		globalThis.location.hash = location;
+	},
+
+	/**
+	**	Adds the specified route to the routing map.
+	**
+	**	>> void addRoute (string route, function onRoute);
+	**	>> void addRoute (string route, function onRoute, function onUnroute);
+	*/
+	addRoute: function (route, onRoute, onUnroute)
+	{
+		if (!this.routes[route])
+		{
+			this.routes[route] = new _Router.Route (route);
+			this.sortedRoutes.push (route);
+
+			this.sortedRoutes.sort (function(a, b) {
+				return _Router.routes[a].routeRegex.length - _Router.routes[b].routeRegex.length;
+			});
+		}
+
+		if (onUnroute !== undefined)
+		{
+			this.routes[route].addHandler (onRoute, false);
+			this.routes[route].addHandler (onUnroute, true);
+		}
+		else
+			this.routes[route].addHandler (onRoute, false);
+	},
+
+	/**
+	**	Adds the specified routes to the routing map. The routes map should contain the route expression
+	**	in the key of the map and a handler function in the value.
+	**
+	**	>> void addRoutes (routes: map);
+	*/
+	addRoutes: function (routes)
+	{
+		for (var i in routes)
+		{
+			if (!this.routes[i])
+			{
+				this.routes[i] = new _Router.Route (i);
+				this.sortedRoutes.push (i);
+			}
+
+			this.routes[i].addHandler (routes[i], false);
+		}
+
+		this.sortedRoutes.sort (function(a, b) {
+			return _Router.routes[a].routeRegex.length - _Router.routes[b].routeRegex.length;
+		});
+	},
+
+	/**
+	**	Removes the specified route from the routing map.
+	**
+	**	>> void removeRoute (string route, function onRoute);
+	**	>> void removeRoute (string route, function onRoute, function onUnroute);
+	*/
+	removeRoute: function (route, onRoute, onUnroute)
+	{
+		if (!this.routes[route]) return;
+
+		if (onUnroute !== undefined)
+		{
+			this.routes[route].removeHandler (onRoute, false);
+			this.routes[route].removeHandler (onUnroute, true);
+		}
+		else
+			this.routes[route].removeHandler (onRoute);
+	},
+
+	/**
+	**	Removes the specified routes from the routing map. The routes map should contain the route
+	**	expression in the key of the map and a handler function in the value.
+	**
+	**	>> void removeRoutes (routes: map);
+	*/
+	removeRoutes: function (routes)
+	{
+		for (var i in routes)
+		{
+			if (!this.routes[i]) continue;
+
+			this.routes[i].removeHandler (routes[i]);
+		}
+	},
+
+	/**
+	**	Given a formatted location and a previous one it will return the correct real location.
+	**
+	**	string realLocation (cLocation: string, pLocation: string);
+	*/
+	realLocation: function (cLocation, pLocation)
+	{
+		if (!pLocation) pLocation = this.location;
+		if (!pLocation) pLocation = " ";
+
+		var state = 0, i = 0, j = 0, k;
+		var rLocation = "";
+
+		while (state != -1 && i < cLocation.length && j < pLocation.length)
+		{
+			switch (state)
+			{
+				case 0:
+					if (cLocation.substr(i++, 1) == "*")
+					{
+						state = 1;
+						break;
+					}
+
+					if (cLocation.substr(i-1, 1) != pLocation.substr(j++, 1))
+					{
+						rLocation += cLocation.substr(i-1);
+						state = -1;
+						break;
+					}
+
+					rLocation += pLocation.substr(j-1, 1);
+					break;
+
+				case 1:
+					if (cLocation.substr(i, 1) == "*")
+					{
+						state = 3;
+						i++;
+						break;
+					}
+
+					state = 2;
+					break;
+
+				case 2:
+					k = pLocation.indexOf(cLocation.substr(i, 1), j);
+					if (k == -1)
+					{
+						rLocation += pLocation.substr(j) + cLocation.substr(i);
+						state = -1;
+						break;
+					}
+
+					rLocation += pLocation.substr(j, k-j);
+
+					state = 0;
+					j = k;
+					break;
+
+				case 3:
+					k = pLocation.lastIndexOf(cLocation.substr(i, 1));
+					if (k == -1)
+					{
+						rLocation += cLocation.substr(i);
+						state = -1;
+						break;
+					}
+
+					rLocation += pLocation.substr(j, k-j);
+
+					state = 0;
+					j = k;
+					break;
+			}
+		}
+
+		if (state != -1)
+			rLocation += cLocation.substr(i);
+
+		return rLocation.trim();
+	},
+
+	/**
+	**	Event handler for when the location hash changes.
+	*/
+	onLocationChanged: function ()
+	{
+		var cLocation = location.hash.substr(1);
+		var rLocation = _Router.realLocation (cLocation);
+
+		if (cLocation != rLocation)
+		{
+			globalThis.location.replace("#" + rLocation);
+			return;
+		}
+
+		this.location = cLocation;
+		this.args = this.location.split ("/");
+
+		if (this.ignoreHashchangeEvent > 0)
+		{
+			this.ignoreHashchangeEvent--;
+			return;
+		}
+
+		for (var i = 0; i < this.sortedRoutes.length; i++)
+			this.routes[this.sortedRoutes[i]].dispatch (this.location);
+	}
+};
+
+_Router.init();
+
+},{"@rsthn/rin":12}],7:[function(require,module,exports){
+/*
 **	rin/alpha
 **
 **	Copyright (c) 2013-2020, RedStar Technologies, All rights reserved.
@@ -236,7 +1819,7 @@ Rin.deserialize = function (s)
 	return JSON.parse(s);
 };
 
-},{}],2:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /*
 **	rin/class
 **
@@ -434,9 +2017,9 @@ Class.create = function (proto)
 	return new (this.extend(proto)) ();
 };
 
-},{"./alpha":1}],3:[function(require,module,exports){
+},{"./alpha":7}],9:[function(require,module,exports){
 /*
-**	rin/element
+**	rin/collection
 **
 **	Copyright (c) 2013-2020, RedStar Technologies, All rights reserved.
 **	https://www.rsthn.com/
@@ -451,620 +2034,330 @@ Class.create = function (proto)
 **	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-const Rin = require('./alpha');
-const Model = require('./model');
-const Template = require('./template');
+let Rin = require('./alpha');
+let Serializable = require('./serializable');
 
-/*
-**	Base class for custom elements.
+/**
+**	Serializable collection class, used to store items and manipulate them. The items should also be serializable.
 */
 
-const Element = module.exports = 
-{
+module.exports = Serializable.extend
+({
 	/**
-	**	Map containing the original prototypes for all registered elements.
+	**	Name of the class.
 	*/
-	protos: { },
+	className: "Collection",
 
 	/**
-	**	Indicates if the element is a root element, that is, the target element to attach elements having data-ref attribute.
+	**	Type of the items in the collection, should be overriden by derived classes to reference a valid class.
 	*/
-	isRoot: false,
+	itemt: null, /* Class or Function */
 
 	/**
-	**	Model type (class) for the element's model.
+	**	Indicates if the collection is dynamic. This affects only unflattening. When dynamic the "itemt" attribute is a
+	**	function that takes an object as parameter and returns the appropriate instanced class (unflattened).
 	*/
-	modelt: Model,
+	isDynamic: false,
 
 	/**
-	**	Data model related to the element.
+	**	Array of items.
 	*/
-	model: null,
+	items: null, /* Array */
 
 	/**
-	**	Events map.
+	**	Constructs the collection.
 	*/
-	events: null,
-
-	/**
-	**	Element constructor.
-	*/
-	__ctor: function()
+	__ctor: function (opts, isflat)
 	{
-		if (this.events)
-			this.bindEvents (this.events);
-
-		this._list_watch = [];
-		this._list_visible = [];
-		this._list_property = [];
-
-		this.init();
-
-		Object.keys(this._super).reverse().forEach(i =>
-		{
-			if ('init' in this._super[i])
-				this._super[i].init();
-		});
-
-		this.collectWatchers();
+		this._super.Serializable.__ctor(opts, isflat);
 	},
 
 	/**
-	**	Initializes the element. Called after construction of the instance.
-	**
-	**	>> void init();
+	**	Initializes the collection with the specified options.
 	*/
-	init: function()
+	init: function (opts)
 	{
+		Rin.override (this, opts);
+		
+		this.items = new Array();
+
+		if (opts.items)
+		{
+			for (var i = 0; i < opts.items.length; i++)
+				this.add (opts.items[i]);
+		}
 	},
 
 	/**
-	**	Sets the model of the element and executes the modelChanged event handler.
-	**
-	**	>> Element setModel (Model model);
+	**	Flattens the collection.
 	*/
-	setModel: function (model)
+	flatten: function ()
 	{
-		if (!model) return this;
+		var items = [];
 
-		if (!(model instanceof this.modelt))
-			model = new this.modelt (model);
+		if (this.itemt == null && !("flattenItem" in this))
+			throw new Error ("Collection: Unable to flatten, the itemt class was not specified and flattenItem() is not available.");
 
-		if (this.model != null)
+		for (var i = 0; i < this.items.length; i++)
 		{
-			this.model.removeEventListener ("modelChanged", this.onModelPreChanged, this);
-			this.model.removeEventListener ("propertyChanging", this.onModelPropertyChanging, this);
-			this.model.removeEventListener ("propertyChanged", this.onModelPropertyPreChanged, this);
-			this.model.removeEventListener ("propertyRemoved", this.onModelPropertyRemoved, this);
+			if (this.itemt == null)
+				items.push (this.flattenItem(this.items[i]));
+			else
+				items.push (this.items[i].flatten());
 		}
 
-		this.model = model;
+		return items;
+	},
 
-		this.model.addEventListener ("modelChanged", this.onModelPreChanged, this);
-		this.model.addEventListener ("propertyChanging", this.onModelPropertyChanging, this);
-		this.model.addEventListener ("propertyChanged", this.onModelPropertyPreChanged, this);
-		this.model.addEventListener ("propertyRemoved", this.onModelPropertyRemoved, this);
+	/**
+	**	Unflattens the collection. Uses the "itemt" attribute to convert the plain objects into class-objects.
+	*/
+	unflatten: function (o)
+	{
+		var items = [];
 
-		this.onModelPreChanged(null, { fields: Object.keys(this.model.properties) });
+		if (this.itemt == null && !("unflattenItem" in this))
+			throw new Error ("Collection: Unable to unflatten, the itemt class was not specified and unflattenItem() is not available.");
+
+		for (var i = 0; i < o.length; i++)
+		{
+			if (this.itemt == null)
+				items.push (this.unflattenItem (o[i]));
+			else
+				items.push (this.isDynamic ? this.itemt(o[i]) : new this.itemt (o[i], true));
+		}
+
+		return { items: items };
+	},
+
+	reset: function ()
+	{
+		this.items = new Array();
 		return this;
 	},
 
-	/**
-	**	Returns the model of the element. This is a dummy function returning the public attribute "model" of this class.
-	**
-	**	>> Model getModel();
-	*/
-	getModel: function ()
+	clear: function ()
 	{
-		return this.model;
-	},
+		var items = this.items;
+		this.reset();
 
-	/*
-	**	Returns the width of the element.
-	**
-	**	>> float getWidth([elem]);
-	*/
-	getWidth: function (elem)
-	{
-		return (elem || this).getBoundingClientRect().width;
-	},
-
-	/*
-	**	Returns the height of the element.
-	**
-	**	>> float getHeight([elem]);
-	*/
-	getHeight: function (elem)
-	{
-		return (elem || this).getBoundingClientRect().height;
-	},
-
-	/**
-	**	Binds all events in the specified map to the element, the events map can have one of the following forms:
-	**
-	**		"click .button": "doSomething",		(Delegated Event)
-	**		"click .button": function() { },	(Delegated Event)
-	**		"myevt @this": "...",				(Element Event)
-	**		"myevt": "...",						(Element Event)
-	**		"myevt @objName": "...",			(Element Event)
-	**		"#propname": "...",					(Property Changed Event)
-	**		"keyup(10) .input": "..."			(Delegated Event with Parameters)
-	**
-	**	>> Element bindEvents (object events);
-	*/
-	bindEvents: function (events)
-	{
-		for (var evtstr in events)
-		{
-			let hdl = events[evtstr];
-
-			if (Rin.typeOf(hdl) == 'string')
-				hdl = this[hdl];
-
-			hdl = hdl.bind(this);
-
-			var i = evtstr.indexOf(" ");
-
-			var name = i == -1 ? evtstr : evtstr.substr(0, i);
-			var selector = i == -1 ? "" : evtstr.substr(i + 1);
-
-			var args = null;
-
-			var j = name.indexOf("(");
-			if (j != -1)
-			{
-				args = name.substr(j+1, name.length-j-2).split(",");
-				name = name.substr(0, j);
-			}
-
-			if (selector.substr(0,1) == "@")
-			{
-				if (selector.substr(1) == "this")
-				{
-					this.listen(name, hdl);
-				}
-				else
-					this[selector.substr(1)].addEventListener(name, hdl);
-
-				continue;
-			}
-
-			if (name.substr(0, 1) == "#")
-			{
-				this.listen("propertyChanged."+name.substr(1), hdl);
-				continue;
-			}
-
-			if (args != null)
-			{
-				switch (name)
-				{
-					case "keyup": case "keydown":
-						this.listen (name, selector, function (evt, args)
-						{
-							if (Rin.indexOf(args, evt.keyCode.toString()) != -1)
-								return hdl (evt, args);
-						});
-						continue;
-				}
-			}
-
-			this.listen (name, selector, hdl);
-		}
+		for (var i = 0; i < items.length; i++)
+			this.onItemRemoved (items[i], 0);
 
 		return this;
 	},
 
 	/**
-	**	Listens for an event for elements matching the specified selector.
+	**	Sorts the collection. A comparison function should be provided, or the name of a property to sort by.
 	**
-	**	>> void listen (string eventName, string selector, function handler);
-	**	>> void listen (string eventName, function handler);
+	**	Object sort (fn: Function)
+	**	Object sort (prop: string, [desc:bool=false])
 	*/
-	listen: function (eventName, selector, handler)
+	sort: function (fn, desc)
 	{
-		if (Rin.typeOf(selector) == "function")
+		if (typeof(fn) != "function")
 		{
-			handler = selector;
-			selector = null;
+			this.items.sort(function(a, b)
+			{
+				return (a[fn] <= b[fn] ? -1 : 1) * (desc === true ? -1 : 1);
+			});
+		}
+		else
+			this.items.sort(fn);
+
+		return this;
+	},
+
+	/**
+	**	Searches for an item with the specified fields and returns it. The "inc" object is the "inclusive" map, meaning all fields must match
+	**	and the optional "exc" is the exclusive map, meaning not even one field should match.
+	**
+	**	Object findItem (inc: Object, exc: Object);
+	*/	
+	findItem: function (inc, exc)
+	{
+		if (!this.items) return null;
+
+		for (var i = 0; i < this.items.length; i++)
+		{
+			if (exc && Rin.partialCompare(this.items[i], exc))
+				continue;
+
+			if (Rin.partialCompare(this.items[i], inc))
+				return this.items[i];
 		}
 
-		this.addEventListener (eventName, (evt) =>
+		return null;
+	},
+
+	getItems: function ()
+	{
+		return this.items;
+	},
+
+	count: function ()
+	{
+		return this.items.length;
+	},
+
+	isEmpty: function ()
+	{
+		return !this.items.length;
+	},
+
+	add: function (item)
+	{
+		if (!item || !this.onBeforeItemAdd(item))
+			return this;
+
+		this.items.push (item);
+		this.onItemAdded (item);
+
+		return this;
+	},
+
+	addAt: function (index, item)
+	{
+		if (!item || !this.onBeforeItemAdd (item))
+			return this;
+
+		if (index < 0) index = 0;
+		if (index > this.items.length) index = this.items.length;
+
+		if (index == 0)
 		{
-			if (selector && selector != "*")
-			{
-				let elems = this.querySelectorAll(selector);
-
-				evt.source = evt.target;
-
-				while (evt.source !== this)
-				{
-					let i = Rin.indexOf(elems, evt.source);
-					if (i !== null)
-					{
-						handler.call (this, evt, evt.detail);
-						break;
-					}
-					else
-					{
-						evt.source = evt.source.parentElement;
-					}
-				}
-			}
-			else
-			{
-				handler.call (this, evt, evt.detail);
-			}
-
-			evt.stopPropagation();
-		});
-	},
-
-	/**
-	**	Dispatches a new event with the specified name and the given arguments.
-	**
-	**	>> void dispatch (string eventName, object args);
-	*/
-	dispatch: function (eventName, args)
-	{
-		this.dispatchEvent (new CustomEvent (eventName, { bubbles: true, detail: args }));
-	},
-
-	/**
-	**	Sets the innerHTML property of the element and runs some post set-content tasks.
-	**
-	**	>> void setInnerHTML (value);
-	*/
-	setInnerHTML: function (value)
-	{
-		this.innerHTML = value;
-		this.collectWatchers ();
-	},
-
-	/**
-	**	Collects all watchers elements (data-watch, data-visible, data-property), that depend on the model, should be invoked
-	**	when the structure of the element changed (added/removed children). This is automatically called when the setInnerHTML
-	**	method is called.
-	**
-	**	>> void collectWatchers ();
-	*/
-	collectWatchers: function ()
-	{
-		let self = this;
-		let list;
-
-		list = this.querySelectorAll("[data-watch]");
-		for (let i = 0; i < list.length; i++)
+			this.items.unshift(item);
+		}
+		else if (index == this.items.length)
 		{
-			list[i]._template = Template.compile(list[i].innerHTML);
-			list[i]._watch = new RegExp(list[i].dataset.watch);
-			list[i].innerHTML = '';
+			this.items.push(item);
+		}
+		else
+		{
+			var tmp = this.items.splice(0, index);
+			tmp.push(item);
 
-			list[i].removeAttribute('data-watch');
-			this._list_watch.push(list[i]);
+			this.items = tmp.concat(this.items);
 		}
 
-		list = this.querySelectorAll("[data-visible]");
-		for (let i = 0; i < list.length; i++)
-		{
-			list[i]._visible = Template.compile(list[i].dataset.visible);
-
-			list[i].removeAttribute('data-visible');
-			this._list_visible.push(list[i]);
-		}
-
-		list = this.querySelectorAll("[data-property]");
-		for (let i = 0; i < list.length; i++)
-		{
-			list[i].onchange = function()
-			{
-				switch (this.type)
-				{
-					case 'checkbox':
-						self.getModel().set(this.name, this.checked ? '1' : '0');
-						break;
-
-					case 'field':
-						self.getModel().set(this.name, this.getValue());
-						break;
-
-					default:
-						self.getModel().set(this.name, this.value);
-						break;
-				}
-			};
-
-			list[i].name = list[i].dataset.property;
-
-			list[i].removeAttribute('data-property');
-			this._list_property.push(list[i]);
-		}
-
-		this._list_watch = this._list_watch.filter(i => i.parentElement != null);
-		this._list_visible = this._list_visible.filter(i => i.parentElement != null);
-		this._list_property = this._list_property.filter(i => i.parentElement != null);
-
-		if (this.model != null)
-			this.model.update(true);
+		this.onItemAdded (item);
+		return this;
 	},
 
-	/**
-	**	Executed when the element is created and yet not attached to the DOM tree.
-	**
-	**	>> void onCreated ();
-	*/
-	onCreated: function()
+	addItems: function (list)
+	{
+		if (!list) return this;
+
+		for (var i = 0; i < list.length; i++)
+			this.add (list[i]);
+
+		return this;
+	},
+
+	indexOf: function (item)
+	{
+		return this.items.indexOf(item);
+	},
+
+	getAt: function (index, rel)
+	{
+		if (index < 0 && rel == true)
+			index += this.items.length;
+
+		return index >= 0 && index < this.items.length ? this.items[index] : null;
+	},
+
+	removeAt: function (index)
+	{
+		if (index < 0 || index >= this.items.length)
+			return this;
+
+		var item = this.items[index];
+
+		this.items.splice (index, 1);
+
+		this.onItemRemoved (item, index);
+		return this;
+	},
+
+	remove: function (item)
+	{
+		this.removeAt (this.indexOf(item));
+	},
+
+	forEach: function (hdl, ctx)
+	{
+		if (this.isEmpty())
+			return this;
+
+		if (!ctx) ctx = this;
+
+		for (var i = 0; i < this.items.length; i++)
+			if (hdl.call (ctx, this.items[i], i) === false) break;
+
+		return this;
+	},
+
+	forEachCall: function (method)
+	{
+		if (this.isEmpty())
+			return this;
+
+		var args = new Array ();
+
+		for (var i = 1; i < arguments.length; i++)
+			args.push(arguments[i]);
+
+		for (var i = 0; i < this.items.length; i++)
+			if (this.items[i][method].apply (this.items[i], args) === false) break;
+
+		return this;
+	},
+
+	forEachRev: function (hdl, ctx)
+	{
+		if (this.isEmpty())
+			return this;
+
+		if (!ctx) ctx = this;
+
+		for (var i = this.items.length-1; i >= 0; i--)
+			if (hdl.call (ctx, this.items[i], i) === false) break;
+
+		return this;
+	},
+
+	forEachRevCall: function (method)
+	{
+		if (this.isEmpty())
+			return this;
+
+		var args = new Array ();
+
+		for (var i = 1; i < arguments.length; i++)
+			args.push(arguments[i]);
+
+		for (var i = this.items.length-1; i >= 0; i--)
+			if (this.items[i][method].apply (this.items[i], args) === false) break;
+
+		return this;
+	},
+
+	onBeforeItemAdd: function (item)
+	{
+		return true;
+	},
+
+	onItemAdded: function (item)
 	{
 	},
 
-	/**
-	**	Executed whem the element is attached to the DOM tree.
-	**
-	**	>> void onConnected ();
-	*/
-	onConnected: function()
+	onItemRemoved: function (item)
 	{
-	},
-
-	/**
-	**	Executed when the element is no longer a part of the DOM tree.
-	**
-	**	>> void onDisconnected ();
-	*/
-	onDisconnected: function()
-	{
-	},
-
-	/**
-	**	Event handler invoked when the model has changed, executed before onModelChanged() to update internal dependencies,
-	**	should not be overriden or elements watching the model will not be updated.
-	**
-	**	>> void onModelPreChanged (evt, args);
-	*/
-	onModelPreChanged: function (evt, args)
-	{
-		let data = this.getModel().get();
-
-		for (let i = 0; i < this._list_watch.length; i++)
-		{
-			for (let j of args.fields)
-			{
-				if (!this._list_watch[i]._watch.test(j))
-					continue;
-
-				this._list_watch[i].innerHTML = this._list_watch[i]._template(data);
-				break;
-			}
-		}
-
-		for (let i = 0; i < this._list_visible.length; i++)
-		{
-			if (this._list_visible[i]._visible(data, 'arg'))
-				this._list_visible[i].style.display = 'block';
-			else
-				this._list_visible[i].style.display = 'none';
-		}
-
-		this.onModelChanged(evt, args);
-	},
-
-	/**
-	**	Event handler invoked when the model has changed.
-	**
-	**	>> void onModelChanged (evt, args);
-	*/
-	onModelChanged: function (evt, args)
-	{
-	},
-
-	/**
-	**	Event handler invoked when a property of the model is changing.
-	**
-	**	>> void onModelPropertyChanging (evt, args);
-	*/
-	onModelPropertyChanging: function (evt, args)
-	{
-	},
-
-	/**
-	**	Event handler invoked when a property of the model has changed, executed before onModelPropertyChanged() to update internal
-	**	dependencies, should not be overriden or elements depending on the property will not be updated.
-	**
-	**	>> void onModelPropertyPreChanged (evt, args);
-	*/
-	onModelPropertyPreChanged: function (evt, args)
-	{
-		for (let i = 0; i < this._list_property.length; i++)
-		{
-			if (this._list_property[i].name == args.name)
-			{
-				let trigger = true;
-
-				switch (this._list_property[i].type)
-				{
-					case 'radio':
-						if (this._list_property[i].value != args.value)
-						{
-							this._list_property[i].parentElement.classList.remove('active');
-							continue;
-						}
-
-						this._list_property[i].checked = true;
-						this._list_property[i].parentElement.classList.add('active');
-						break;
-
-					case 'checkbox':
-						if (~~args.value)
-						{
-							this._list_property[i].checked = true;
-							this._list_property[i].parentElement.classList.add('active');
-						}
-						else
-						{
-							this._list_property[i].checked = false;
-							this._list_property[i].parentElement.classList.remove('active');
-						}
-
-						break;
-
-					case 'field':
-						this._list_property[i].setValue (args.value);
-						trigger = false;
-						break;
-
-					default:
-						this._list_property[i].value = args.value;
-						break;
-				}
-
-				if (trigger && this._list_property[i].onchange)
-					this._list_property[i].onchange();
-			}
-		}
-
-		this.onModelPropertyChanged(evt, args);
-	},
-
-	/**
-	**	Event handler invoked when a property of the model has changed. Automatically triggers an
-	**	internal event named "propertyChanged.<propertyName>".
-	**
-	**	>> void onModelPropertyChanged (evt, args);
-	*/
-	onModelPropertyChanged: function (evt, args)
-	{
-		this.dispatch ("propertyChanged." + args.name, args);
-		this.dispatch ("propertyChanged", args);
-	},
-
-	/**
-	**	Event handler invoked when a property of the model is removed.
-	**
-	**	>> void onModelPropertyRemoved (evt, args);
-	*/
-	onModelPropertyRemoved: function (evt, args)
-	{
-	},
-
-	/*
-	**	Registers a new custom element with the specified name, extra functionality can be added with one or more prototypes, by default
-	**	all elements also get the Rin.Element prototype. Note that the final prototypes of all registered elements are stored, and
-	**	if you want to inherit another element's prototype just provide its name (string) in the protos argument list.
-	**
-	**	>> class register (string name, (object|string)... protos);
-	*/
-	register: function (name, ...protos)
-	{
-		var newElement = class extends HTMLElement
-		{
-			constructor()
-			{
-				super();
-				this.invokeConstructor = true;
-
-				this._super = { };
-
-				for (let i of Object.entries(this.constructor.prototype._super))
-				{
-					this._super[i[0]] = { };
-
-					for (let j of Object.entries(i[1])) {
-						this._super[i[0]][j[0]] = j[1].bind(this);
-					}
-				}
-
-				this.onCreated();
-			}
-
-			findRoot()
-			{
-				let elem = this.parentElement;
-
-				while (elem != null)
-				{
-					if ("isRoot" in elem && elem.isRoot)
-						return elem;
-
-					elem = elem.parentElement;
-				}
-
-				return null;
-			}
-
-			connectedCallback()
-			{
-				if (this.dataset.ref)
-				{
-					let root = this.findRoot();
-					if (root) root[this.dataset.ref] = this;
-				}
-
-				if (this.invokeConstructor)
-				{
-					this.invokeConstructor = false;
-					this.__ctor();
-				}
-
-				this.onConnected();
-			}
-
-			disconnectedCallback()
-			{
-				if (this.dataset.ref)
-				{
-					let root = this.findRoot();
-					if (root) root[this.dataset.ref] = null;
-				}
-
-				this.onDisconnected();
-			}
-		};
-
-		Rin.override (newElement.prototype, Element);
-
-		const proto = { };
-		const _super = { };
-
-		for (let i = 0; i < protos.length; i++)
-		{
-			if (!protos[i]) continue;
-
-			if (Rin.typeOf(protos[i]) == 'string')
-			{
-				const name = protos[i];
-
-				protos[i] = Element.protos[name];
-				if (!protos[i]) continue;
-
-				_super[name] = { };
-
-				for (let f in protos[i])
-				{
-					if (Rin.typeOf(protos[i][f]) != 'function')
-						continue;
-
-					_super[name][f] = protos[i][f];
-				}
-			}
-
-			if ('_super' in protos[i])
-				Rin.override (_super, protos[i]._super);
-
-			Rin.override (newElement.prototype, protos[i]);
-			Rin.override (proto, protos[i]);
-		}
-
-		newElement.prototype._super = _super;
-		proto._super = _super;
-
-		customElements.define (name, newElement);
-		Element.protos[name] = proto;
-
-		return newElement;
 	}
-};
+});
 
-},{"./alpha":1,"./model":8,"./template":9}],4:[function(require,module,exports){
+},{"./alpha":7,"./serializable":18}],10:[function(require,module,exports){
 /*
 **	rin/event-dispatcher
 **
@@ -1290,7 +2583,7 @@ module.exports = Class.extend
 	}
 });
 
-},{"./class":2,"./event":5}],5:[function(require,module,exports){
+},{"./class":8,"./event":11}],11:[function(require,module,exports){
 /*
 **	rin/event
 **
@@ -1447,7 +2740,7 @@ module.exports = Class.extend
 				}
 				else
 				{
-					if (window[this.list[this.i].handler].call (null, this, this.args, this.list[this.i].data) === false)
+					if (globalThis[this.list[this.i].handler].call (null, this, this.args, this.list[this.i].data) === false)
 						break;
 				}
 			}
@@ -1500,7 +2793,44 @@ module.exports = Class.extend
 	}
 });
 
-},{"./alpha":1,"./class":2}],6:[function(require,module,exports){
+},{"./alpha":7,"./class":8}],12:[function(require,module,exports){
+/*
+**	rin/main
+**
+**	Copyright (c) 2013-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+let Rin = require('./alpha');
+
+Rin.Rin = Rin;
+Rin.Class = require('./class');
+
+Rin.Event = require('./event');
+Rin.EventDispatcher = require('./event-dispatcher');
+
+Rin.Model = require('./model');
+Rin.Model.List = require('./model-list');
+
+Rin.Serializable = require('./serializable');
+Rin.Collection = require('./collection');
+Rin.Schema = require('./schema');
+
+Rin.Template = require('./template');
+
+/* ---- */
+Object.assign (module.exports, Rin);
+
+},{"./alpha":7,"./class":8,"./collection":9,"./event":11,"./event-dispatcher":10,"./model":16,"./model-list":14,"./schema":17,"./serializable":18,"./template":19}],13:[function(require,module,exports){
 /*
 **	rin/model-constraints
 **
@@ -1879,7 +3209,326 @@ module.exports =
 	}
 };
 
-},{"./alpha":1,"./model-regex":7}],7:[function(require,module,exports){
+},{"./alpha":7,"./model-regex":15}],14:[function(require,module,exports){
+/*
+**	rin/model-list
+**
+**	Copyright (c) 2013-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+let Rin = require('./alpha');
+let Model = require('./model');
+
+/**
+**	Generic list for models.
+*/
+
+module.exports = Model.extend
+({
+	/**
+	**	Name of the class.
+	*/
+	className: "List",
+
+	/**
+	**	Class of the items in the list, can be overriden by child classes to impose a more strict constraint.
+	*/
+	itemt: Model,
+
+	/**
+	**	Mirror of properties.contents
+	*/
+	contents: null,
+
+	/**
+	**	Default properties of the model.
+	*/
+	defaults:
+	{
+		contents: null
+	},
+
+	/**
+	**	Constraints of the model to ensure integrity.
+	*/
+	constraints:
+	{
+		contents: {
+			type: "array",
+			arrayof: "@itemt"
+		}
+	},
+
+	/**
+	**	Initialization epilogue. Called after initialization and after model properties are set.
+	**
+	**	>> void ready ();
+	*/
+	ready: function ()
+	{
+		this._eventGroup = "ModelList_" + Date.now() + ":modelChanged";
+
+		this.contents = this.properties.contents;
+	},
+
+	/**
+	**	Connects the event handlers to the item.
+	**
+	**	>> Model _bind (int index, Model item);
+	*/
+	_bind: function (index, item)
+	{
+		if (item && item.addEventListener) item.addEventListener (this._eventGroup, this._onItemEvent, this, index);
+		return item;
+	},
+
+	/**
+	**	Disconnects the event handlers from the item.
+	**
+	**	>> Model _unbind (Model item);
+	*/
+	_unbind: function (item)
+	{
+		if (item && item.removeEventListener) item.removeEventListener (this._eventGroup);
+		return item;
+	},
+
+	/**
+	**	Handler for item events.
+	**
+	**	>> Model _onItemEvent (Event evt, object args, object data);
+	*/
+	_onItemEvent: function (evt, args, data)
+	{
+		this.prepareEvent ("itemChanged", { index: data, item: evt.source }).from (evt)
+		.enqueue (this.prepareEvent ("modelChanged", { fields: ["contents"] })).resume ();
+	},
+
+	/**
+	**	Returns the number of items in the list.
+	**
+	**	>> int count ();
+	*/
+	count: function ()
+	{
+		return this.properties.contents.length;
+	},
+
+	/**
+	**	Clears the contents of the list.
+	**
+	**	>> void clear ();
+	*/
+	clear: function ()
+	{
+		for (var i = 0; i < this.properties.contents; i++)
+			this._unbind (this.properties.contents[i]);
+
+		this.properties.contents = [];
+
+		this.prepareEvent ("itemCleared")
+		.enqueue (this.prepareEvent ("modelChanged", { fields: ["contents"] })).resume ();
+	},
+
+	/**
+	**	Sets the contents of the list with the specified array. All items will be ensured to be of the same model
+	**	type as the one specified in the list.
+	**
+	**	>> void setData (array data);
+	*/
+	setData: function (data)
+	{
+		this.clear ();
+		if (!data) return;
+
+		for (var i = 0; i < data.length; i++)
+		{
+			var item = Rin.ensureTypeOf(this.itemt, data[i]);
+			this._bind (i, item);
+
+			this.properties.contents.push (item);
+		}
+
+		this.prepareEvent ("itemsChanged")
+		.enqueue (this.prepareEvent ("modelChanged", { fields: ["contents"] })).resume ();
+	},
+
+	/**
+	**	Returns the raw array contents of the list.
+	**
+	**	>> array getData ();
+	*/
+	getData: function ()
+	{
+		return this.properties.contents;
+	},
+
+	/**
+	**	Returns the item at the specified index or null if the index is out of bounds.
+	**
+	**	>> Model getAt (int index);
+	*/
+	getAt: function (index)
+	{
+		if (index < 0 || index >= this.properties.contents.length)
+			return null;
+
+		return Rin.ensureTypeOf(this.itemt, this.properties.contents[index]);
+	},
+
+	/**
+	**	Removes and returns the item at the specified index. Returns null if the index is out of bounds.
+	**
+	**	>> Model removeAt (int index);
+	*/
+	removeAt: function (index)
+	{
+		if (index < 0 || index >= this.properties.contents.length)
+			return null;
+
+		var item = Rin.ensureTypeOf(this.itemt, this.properties.contents.splice(index, 1)[0]);
+		this._unbind (item);
+
+		this.prepareEvent ("itemRemoved", { index: index, item: item })
+		.enqueue (this.prepareEvent ("modelChanged", { fields: ["contents"] })).resume ();
+
+		return item;
+	},
+
+	/**
+	**	Sets the item at the specified index. Returns false if the index is out of bounds, true otherwise. The
+	**	item will be ensured to be of the model defined in the list.
+	**
+	**	>> bool setAt (int index, Model item);
+	*/
+	setAt: function (index, item)
+	{
+		if (index < 0 || index >= this.properties.contents.length)
+			return false;
+
+		item = Rin.ensureTypeOf(this.itemt, item);
+
+		this.properties.contents[index] = item;
+		this._bind (index, item);
+
+		this.prepareEvent ("itemChanged", { index: index, item: item })
+		.enqueue (this.prepareEvent ("modelChanged", { fields: ["contents"] })).resume ();
+
+		return true;
+	},
+
+	/**
+	**	Notifies a change in the item at the specified index. Returns false if the index is out of bounds.
+	**
+	**	>> bool updateAt (int index);
+	*/
+	updateAt: function (index)
+	{
+		if (index < 0 || index >= this.properties.contents.length)
+			return false;
+
+		this.prepareEvent ("itemChanged", { index: index, item: this.properties.contents[index] })
+		.enqueue (this.prepareEvent ("modelChanged", { fields: ["contents"] })).resume ();
+
+		return true;
+	},
+
+	/**
+	**	Adds an item to the bottom of the list. Returns null if the item is not an object or a model. The item
+	**	will be ensured to be of the model specified in the list.
+	**
+	**	>> Model push (Model item);
+	*/
+	push: function (item)
+	{
+		if (item && Rin.typeOf(item) != "object")
+			return null;
+
+		item = Rin.ensureTypeOf(this.itemt, item);
+
+		this.properties.contents.push (item);
+		this._bind (this.properties.contents.length-1, item);
+
+		this.prepareEvent ("itemAdded", { index: this.properties.contents.length-1, item: item })
+		.enqueue (this.prepareEvent ("modelChanged", { fields: ["contents"] })).resume ();
+
+		return item;
+	},
+
+	/**
+	**	Removes and returns an item from the bottom of the list.
+	**
+	**	>> Model pop ();
+	*/
+	pop: function ()
+	{
+		return this._unbind (Rin.ensureTypeOf(this.itemt, this.properties.contents.pop()));
+	},
+
+	/**
+	**	Adds an item to the top of the list. Returns null if the item is not an object or a model. The item
+	**	will be ensured to be of the model specified in the list.
+	**
+	**	>> Model unshift (Model item);
+	*/
+	unshift: function (item)
+	{
+		if (item && Rin.typeOf(item) != "object")
+			return null;
+
+		item = Rin.ensureTypeOf(this.itemt, item);
+
+		this.properties.contents.unshift (item);
+		this._bind (0, item);
+
+		this.prepareEvent ("itemAdded", { index: 0, item: item })
+		.enqueue (this.prepareEvent ("modelChanged", { fields: ["contents"] })).resume ();
+
+		return item;
+	},
+
+	/**
+	**	Removes and returns an item from the top of the list.
+	**
+	**	>> Model shift ();
+	*/
+	shift: function ()
+	{
+		return this._unbind (Rin.ensureTypeOf(this.itemt, this.properties.contents.shift()));
+	},
+
+	/**
+	**	Searches for an item matching the specified partial definition and returns its index. Returns -1 if the
+	**	item was not found. If retObject is set to true the object will be returned instead of its index and null
+	**	will be returned when the item is not found.
+	**
+	**	int|object find (object data, bool retObject=false);
+	*/
+	find: function (data, retObject)
+	{
+		var contents = this.properties.contents;
+
+		for (var i = 0; i < contents.length; i++)
+		{
+			if (Rin.partialCompare (contents[i].properties, data))
+				return retObject ? contents[i] : i;
+		}
+
+		return retObject ? null : -1;
+	}
+});
+
+},{"./alpha":7,"./model":16}],15:[function(require,module,exports){
 /*
 **	rin/model-regex
 **
@@ -1911,7 +3560,7 @@ module.exports =
 	utext: /^([\r\n\pL\pN\pS &!@#$%*\[\]()_+=;',.\/?:"~-]+)$/
 };
 
-},{}],8:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 /*
 **	rin/model
 **
@@ -1979,17 +3628,18 @@ let _Model = module.exports = EventDispatcher.extend
 	/**
 	**	Initializes the model and sets the properties to the specified data object.
 	**
-	**	>> Model __ctor (string map);
+	**	>> Model __ctor (object data);
+	**	>> Model __ctor (object data, object defaults);
 	*/
-	__ctor: function ()
+	__ctor: function (data, defaults)
 	{
 		this._super.EventDispatcher.__ctor();
 
 		this.properties = { };
 
-		if (arguments.length >= 2 && arguments[1] != null)
+		if (defaults != null)
 		{
-			this.reset(arguments[1]);
+			this.reset (defaults);
 		}
 		else
 		{
@@ -2020,8 +3670,8 @@ let _Model = module.exports = EventDispatcher.extend
 
 		this.init();
 
-		if (arguments.length >= 1 && arguments[0] != null)
-			this.set(arguments[0], true);
+		if (data != null)
+			this.set (arguments[0], true);
 
 		if (this.constraints) this.update();
 
@@ -2039,7 +3689,7 @@ let _Model = module.exports = EventDispatcher.extend
 	{
 		if (!this.defaults)
 		{
-			if (!defaults || Rin.typeOf(defaults) != "object")
+			if (!defaults || (Rin.typeOf(defaults) != "object" && Rin.typeOf(defaults) != "function"))
 				return this;
 
 			this.defaults = defaults;
@@ -2596,7 +4246,295 @@ let _Model = module.exports = EventDispatcher.extend
 
 _Model.Constraints = require('./model-constraints');
 
-},{"./alpha":1,"./event-dispatcher":4,"./model-constraints":6}],9:[function(require,module,exports){
+},{"./alpha":7,"./event-dispatcher":10,"./model-constraints":13}],17:[function(require,module,exports){
+/*
+**	rin/schema
+**
+**	Copyright (c) 2013-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+let Rin = require('./alpha');
+
+/**
+**	The utility functions in this module allow to create a very strict serialization/deserialization schema
+**	to ensure that all values are of the specific type when stored in string format.
+*/
+
+let _Schema = module.exports =
+{
+	Type: function (data)
+    {
+		var o =
+		{
+            flatten: function (value, context) {
+                return value;
+            },
+
+            unflatten: function (value, context) {
+                return value;
+            }
+        };
+
+        return data ? Rin.override(o, data) : o;
+    },
+
+	String: function()
+	{
+		return _Schema.Type({
+			flatten: function (value, context) {
+				return value != null ? value.toString() : null;
+			},
+
+			unflatten: function (value, context) {
+				return value != null ? value.toString() : null;
+			}
+		});
+	},
+
+	Integer: function()
+	{
+		return _Schema.Type({
+			flatten: function (value, context) {
+				return ~~value;
+			},
+
+			unflatten: function (value, context) {
+				return ~~value;
+			}
+		});
+	},
+
+	Numeric: function()
+	{
+		return _Schema.Type({
+			flatten: function (value, context) {
+				return parseFloat(value);
+			},
+
+			unflatten: function (value, context) {
+				return parseFloat(value);
+			}
+		});
+	},
+
+	Bool: function()
+	{
+		return _Schema.Type({
+			flatten: function (value, context) {
+				return (~~value) ? true : false;
+			},
+
+			unflatten: function (value, context) {
+				return (~~value) ? true : false;
+			}
+		});
+	},
+
+	SharedString: function()
+	{
+		return _Schema.Type
+		({
+			flatten: function (value, context)
+			{
+				if (value == null) return 0;
+
+				value = value.toString();
+
+                if (!("strings" in context))
+                {
+                    context.strings_map = { };
+                    context.strings = [ ];
+                }
+
+                if (!(value in context.strings_map))
+                {
+                    context.strings.push(value);
+                    context.strings_map[value] = context.strings.length;
+                }
+
+                return context.strings_map[value];
+            },
+
+			unflatten: function (value, context)
+			{
+                return value == null || value == 0 ? null : context.strings[~~value - 1];
+            }
+        });
+    },
+
+	Array: function()
+    {
+        return _Schema.Type({
+
+            contains: null,
+
+            of: function (type) {
+                this.contains = type;
+                return this;
+            },
+
+			flatten: function (value, context)
+			{
+				if (value == null) return null;
+
+                var o = [ ];
+                
+                for (var i = 0; i < value.length; i++)
+                    o.push(this.contains.flatten(value[i], context));
+
+                return o;
+            },
+            
+			unflatten: function (value, context)
+			{
+				if (value == null) return null;
+
+                var o = [ ];
+
+                for (var i = 0; i < value.length; i++)
+                    o.push(this.contains.unflatten(value[i], context));
+
+                return o;
+            }
+        });
+    },
+
+    Object: function()
+    {
+        return _Schema.Type({
+
+            properties: [ ],
+
+            property: function (name, type)
+            {
+                this.properties.push({ name: name, type: type });
+                return this;
+            },
+
+            flatten: function (value, context)
+            {
+				if (value == null) return null;
+
+                var o = [ ];
+
+                for (var i = 0; i < this.properties.length; i++)
+                {
+                    o.push(this.properties[i].type.flatten(value[this.properties[i].name], context));
+                }
+
+                return o;
+            },
+            
+            unflatten: function (value, context)
+            {
+				if (value == null) return null;
+
+                var o = { };
+                
+                for (var i = 0; i < this.properties.length; i++)
+                {
+                    o[this.properties[i].name] = this.properties[i].type.unflatten(value[i], context);
+                }
+
+                return o;
+            }
+        });
+    }
+};
+
+},{"./alpha":7}],18:[function(require,module,exports){
+/*
+**	rin/serializable
+**
+**	Copyright (c) 2013-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+let Rin = require('./alpha');
+let Class = require('./class');
+
+/**
+**	Serializable class used to allow serialization and deserialization of any object.
+*/
+
+module.exports = Class.extend
+({
+	/**
+	**	Name of the class.
+	*/
+	className: "Serializable",
+
+	/**
+	**	Initializes the object with the specified options. If the options map is a string it will be first deserialized prior to initialization.
+	*/
+	__ctor: function (opts, isflat)
+	{
+		if (Rin.typeOf(opts) == "string")
+		{
+			opts = Rin.deserialize(opts);
+			isflat = true;
+		}
+
+		if (isflat === true)
+			opts = this.unflatten(opts);
+
+		this.init (opts ? opts : { });
+	},
+
+	/**
+	**	Initializes the object with the specified options.
+	*/
+	init: function (opts)
+	{
+		if (opts) Rin.override (this, opts);
+	},
+
+	/**
+	**	Returns a string representing the flattened object.
+	*/
+	serialize: function ()
+	{
+		return Rin.serialize(this.flatten());
+	},
+
+	/**
+	**	Returns a flattened version of the object.
+	*/
+	flatten: function ()
+	{
+		return { };
+	},
+
+	/**
+	**	Unflattens the given object to be later fed to the init() function.
+	*/
+	unflatten: function (o)
+	{
+		// Override in derived class if required.
+		return o;
+	}
+});
+
+},{"./alpha":7,"./class":8}],19:[function(require,module,exports){
 /*
 **	rin/template
 **
@@ -3253,6 +5191,22 @@ Template.filters =
 	},
 
 	/**
+	**	Returns the valueA if the expression is true otherwise valueB, this is a shorthand of the 'if' filter.
+	**
+	**	? <expr> <valueA> [<valueB>]
+	*/
+	'_?': function(parts, data)
+	{
+		if (Template.expand(parts[1], data, 'arg'))
+			return Template.expand(parts[2], data, 'arg');
+
+		if (parts.length > 3)
+			return Template.expand(parts[3], data, 'arg');
+
+		return '';
+	},
+
+	/**
 	**	Returns the value if the expression is true, supports 'elif' and 'else' as well.
 	**
 	**	if <expr> <value> [elif <expr> <value>] [else <value>]
@@ -3262,10 +5216,10 @@ Template.filters =
 		for (let i = 0; i < parts.length; i += 3)
 		{
 			if (Template.expand(parts[i], data, 'arg') == 'else')
-				return Template.expand(parts[i+1], data, 'arg');
+				return Template.expand(parts[i+1], data, 'text');
 
 			if (Template.expand(parts[i+1], data, 'arg'))
-				return Template.expand(parts[i+2], data, 'arg');
+				return Template.expand(parts[i+2], data, 'text');
 		}
 
 		return '';
@@ -3321,7 +5275,63 @@ Template.filters =
 	}
 };
 
-},{}],10:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
+const xui = require('../xui');
+
+xui.register ('xui-context',
+{
+	isRoot: true,
+
+	init: function()
+	{
+		this.classList.add('xui-dropdown');
+	},
+
+	onConnected: function()
+	{
+		this.root = this.findRoot();
+
+		this._contextListener = this.root.listen ('contextmenu', this.dataset.target, (evt) =>
+		{
+			this.classList.add('visible');
+
+			let hdl = () => {
+				this.classList.remove('visible');
+				window.removeEventListener('click', hdl);
+			};
+
+			window.addEventListener('click', hdl);
+
+			let parent = xui.position.get(this.root);
+			xui.position.set(this, evt.clientX - parent.x, evt.clientY - parent.y);
+		});
+	},
+
+	onDisconnected: function()
+	{
+		this._contextListener.remove();
+	},
+
+	show: function()
+	{
+		if (this.classList.contains('visible'))
+			return;
+
+		this.classList.remove('hidden');
+		this.classList.add('visible');
+	},
+
+	hide: function()
+	{
+		if (this.classList.contains('hidden'))
+			return;
+
+		this.classList.remove('visible');
+		this.classList.add('hidden');
+	}
+});
+
+},{"../xui":24}],21:[function(require,module,exports){
 const xui = require('../xui');
 
 xui.register ('xui-dialog',
@@ -3342,8 +5352,20 @@ xui.register ('xui-dialog',
 			xui.draggable.attach(this.querySelector('.header'), this);
 	},
 
+	show: function()
+	{
+		if (this.classList.contains('visible'))
+			return;
+
+		this.classList.remove('hidden');
+		this.classList.add('visible');
+	},
+
 	hide: function()
 	{
+		if (this.classList.contains('hidden'))
+			return;
+
 		this.classList.remove('visible');
 		this.classList.add('hidden');
 	},
@@ -3359,7 +5381,7 @@ xui.register ('xui-dialog',
 	}
 });
 
-},{"../xui":13}],11:[function(require,module,exports){
+},{"../xui":24}],22:[function(require,module,exports){
 const xui = require('../xui');
 
 xui.register ('xui-list',
@@ -3413,16 +5435,17 @@ xui.register ('xui-list',
 	}
 });
 
-},{"../xui":13}],12:[function(require,module,exports){
+},{"../xui":24}],23:[function(require,module,exports){
 
-require('./elems/dialog.js');
-require('./elems/list.js');
+require('./elems/xui-dialog.js');
+require('./elems/xui-list.js');
+require('./elems/xui-context.js');
 
 module.exports = require('./xui');
 
-},{"./elems/dialog.js":10,"./elems/list.js":11,"./xui":13}],13:[function(require,module,exports){
-const Element = require('@rsthn/rin/element');
-const Template = require('@rsthn/rin/template');
+},{"./elems/xui-context.js":20,"./elems/xui-dialog.js":21,"./elems/xui-list.js":22,"./xui":24}],24:[function(require,module,exports){
+const { Element } = require('@rsthn/rin-front');
+const { Template } = require('@rsthn/rin');
 
 const xui = module.exports =
 {
@@ -3565,4 +5588,4 @@ const xui = module.exports =
 	}
 };
 
-},{"@rsthn/rin/element":3,"@rsthn/rin/template":9}]},{},[12]);
+},{"@rsthn/rin":12,"@rsthn/rin-front":3}]},{},[23]);

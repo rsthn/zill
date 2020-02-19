@@ -1,5 +1,5 @@
-const Element = require('@rsthn/rin/element');
-const Template = require('@rsthn/rin/template');
+const { Element } = require('@rsthn/rin-front');
+const { Template } = require('@rsthn/rin');
 
 const xui = module.exports =
 {

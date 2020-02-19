@@ -1,0 +1,105 @@
+/* ****************************************** */
+.xui-dropdown {
+	display: inline-block; position: relative; font-size: 1rem;
+}
+
+.xui-dropdown li {
+	list-style: none; margin: 0; padding: 0; position: relative;
+	margin-left: -3*@px;
+}
+
+.xui-dropdown ul {
+	display: none; margin: 0; padding: 0; position: absolute; z-index: 1; left: 0; top: 26*@px;
+	background: @base-color + #404040; white-space: nowrap;
+	box-shadow: 2px 2px 8px -2px rgba(0,0,0,0.7); border-radius: 0 @border-radius @border-radius @border-radius;
+	border-left: 4*@px solid @border-color-mid;
+}
+
+.xui-dropdown ul:first-child {
+	top: 0;
+}
+
+.xui-dropdown > b {
+    display: inline-block; padding: 5*@px 8*@px; font-weight: normal;
+	text-shadow: 0px -1px 0px rgba(0,0,0,0.4);
+}
+
+.xui-dropdown li > b, .xui-dropdown li > em {
+	display: block; position: relative; padding: 5*@px 36*@px 5*@px 32*@px; font-weight: normal; font-style: normal;
+}
+
+.xui-dropdown.no-icons li > b, .xui-dropdown.no-icons li > em {
+	padding: 5*@px 16*@px;
+}
+
+.xui-dropdown li > em {
+	color: @text-base; border-bottom: 1px solid @base-color;
+	box-shadow: 0px 1px 0px @border-color-hi;
+	background: linear-gradient(@background-base, @background-darker);
+}
+
+.xui-dropdown li > b > i {
+	margin-left: -22*@px; margin-right: 4*@px;
+}
+
+.xui-dropdown:hover > b {
+	color: @text-base; background: @border-color-mid;
+}
+
+.xui-dropdown li:hover > b {
+    color: @text-base; background: @border-color-mid;
+}
+
+.xui-dropdown li:last-child:hover > b {
+    border-radius: 0 0 @border-radius @border-radius;
+}
+
+.xui-dropdown li:first-child:hover > b {
+    border-radius: 0 @border-radius 0 0;
+}
+
+.xui-dropdown li ul li:first-child:hover > b {
+    border-radius: @border-radius @border-radius 0 0;
+}
+
+.xui-dropdown li.sub-menu:before {
+	float: right; content: "\25CF"; margin-top: 5*@px; margin-right: 6*@px; color: @text-base;
+}
+
+.xui-dropdown:hover > b + ul, .xui-dropdown.visible > ul {
+    display: inline-block;
+}
+
+.xui-dropdown li:hover > ul {
+	display: inline-block; right: 0; top: 0; transform: translate(90%, 0px);
+}
+
+.xui-dropdown li:empty {
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    border-top: 1px solid rgba(0,0,0,0.2);
+}
+
+.xui-dropdown li b:active {
+    animation: fast-blink 0.250s 1;
+}
+
+/* ****************************************** */
+.xui-dropdown.compact {
+	font-size: 1rem;
+}
+
+.xui-dropdown.compact li > b, .xui-dropdown.compact li > em {
+	padding: 3*@px 32*@px 3*@px 32*@px;
+}
+
+.xui-dropdown.compact.no-icons li > b, .xui-dropdown.compact.no-icons li > em {
+	padding: 3*@px 32*@px 3*@px 16*@px;
+}
+
+.xui-dropdown.compact li > b > i {
+	margin-left: -22*@px; margin-right: 4*@px;
+}
+
+.xui-dropdown.compact li.sub-menu:before {
+	margin-top: 3*@px; margin-right: 6*@px;
+}

@@ -18,8 +18,20 @@ xui.register ('xui-dialog',
 			xui.draggable.attach(this.querySelector('.header'), this);
 	},
 
+	show: function()
+	{
+		if (this.classList.contains('visible'))
+			return;
+
+		this.classList.remove('hidden');
+		this.classList.add('visible');
+	},
+
 	hide: function()
 	{
+		if (this.classList.contains('hidden'))
+			return;
+
 		this.classList.remove('visible');
 		this.classList.add('hidden');
 	},

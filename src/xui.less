@@ -1,9 +1,15 @@
 @import (reference) "./css/constants.less";
 
-.repeatpx(@list, @prefix, @prop, @sel:~'', @i:1) when (@i <= length(@list)) {
+.repeat-px(@list, @prefix, @prop, @sel:~'', @i:1) when (@i <= length(@list)) {
 	@value: extract(@list, @i);
 	.@{prefix}-@{value} @{sel} { @{prop}: @value*@px; }
-	.repeatpx(@list, @prefix, @prop, @sel, @i+1);
+	.repeat-px(@list, @prefix, @prop, @sel, @i+1);
+}
+
+.repeat-imp(@list, @prefix, @prop, @sel:~'', @i:1) when (@i <= length(@list)) {
+	@value: extract(@list, @i);
+	.@{prefix}-@{value} @{sel} { @{prop}: @value !important; }
+	.repeat-imp(@list, @prefix, @prop, @sel, @i+1);
 }
 
 .repeat(@list, @prefix, @prop, @sel:~'', @i:1) when (@i <= length(@list)) {
@@ -31,27 +37,27 @@ html {
 
 
 /* ************************** */
-.repeat(@display-modes, d, display);
+.repeat-imp(@display-modes, d, display);
 
 
 /* ************************** */
-.repeatpx(@sizes, p, padding);
-.repeatpx(@sizes, pl, padding-left);
-.repeatpx(@sizes, pr, padding-right);
-.repeatpx(@sizes, pt, padding-top);
-.repeatpx(@sizes, pb, padding-bottom);
+.repeat-px(@sizes, p, padding);
+.repeat-px(@sizes, pl, padding-left);
+.repeat-px(@sizes, pr, padding-right);
+.repeat-px(@sizes, pt, padding-top);
+.repeat-px(@sizes, pb, padding-bottom);
 
-.repeatpx(@sizes, m, margin);
-.repeatpx(@sizes, ml, margin-left);
-.repeatpx(@sizes, mr, margin-right);
-.repeatpx(@sizes, mt, margin-top);
-.repeatpx(@sizes, mb, margin-bottom);
+.repeat-px(@sizes, m, margin);
+.repeat-px(@sizes, ml, margin-left);
+.repeat-px(@sizes, mr, margin-right);
+.repeat-px(@sizes, mt, margin-top);
+.repeat-px(@sizes, mb, margin-bottom);
 
-.repeatpx(@sizes, ch-m, margin, ~'> *');
-.repeatpx(@sizes, ch-ml, margin-left, ~'> *');
-.repeatpx(@sizes, ch-mr, margin-right, ~'> *');
-.repeatpx(@sizes, ch-mt, margin-top, ~'> *');
-.repeatpx(@sizes, ch-mb, margin-bottom, ~'> *');
+.repeat-px(@sizes, ch-m, margin, ~'> *');
+.repeat-px(@sizes, ch-ml, margin-left, ~'> *');
+.repeat-px(@sizes, ch-mr, margin-right, ~'> *');
+.repeat-px(@sizes, ch-mt, margin-top, ~'> *');
+.repeat-px(@sizes, ch-mb, margin-bottom, ~'> *');
 
 
 /* ************************** */
@@ -61,4 +67,5 @@ html {
 
 @import "./css/xui-dialog.less";
 @import "./css/xui-list.less";
+@import "./css/xui-dropdown.less";
 @import "./css/xui-menubar.less";
