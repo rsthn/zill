@@ -1,15 +1,24 @@
 /* ****************************************** */
 .xui-image-list {
-	display: block; box-sizing: border-box; overflow: hidden;
+	display: block; box-sizing: border-box;
 	border-radius: @border-radius; border: 1px solid @border-color-lo; background: @base-color;
     font-size: 0; line-height: 0;
 }
 
-.xui-image-list > * {
+.xui-image-list img {
     border: 1px solid rgba(0,0,0,0.8);
     margin: 2*@px;
 }
 
-.xui-image-list > *:hover {
+.xui-image-list img:hover {
     border: 1px solid rgba(255,255,255,0.8);
+}
+
+.xui-image-list hr {
+	display: block;  border: none; margin: 2*@px 0;
+	border-top: 4px solid rgba(255,255,255,0.25);
+}
+
+.xui-image-list hr:hover {
+	border-top: 4px solid rgba(255,255,255,0.5);
 }

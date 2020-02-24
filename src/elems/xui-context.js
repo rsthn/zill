@@ -4,6 +4,14 @@ xui.register ('xui-context',
 {
 	isRoot: true,
 
+	events: {
+		"click [data-action]": function(evt) {
+			let action = evt.source.dataset.action;
+			evt.source = this._source;
+			this.root[action] (evt);
+		}
+	},
+
 	init: function()
 	{
 		this.classList.add('xui-dropdown');
@@ -17,6 +25,7 @@ xui.register ('xui-context',
 		this._contextListener = this.root.listen ('contextmenu', this.dataset.target, (evt) =>
 		{
 			this.classList.add('visible');
+			this._source = evt.source;
 
 			let hdl = () => {
 				this.classList.remove('visible');
