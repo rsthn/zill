@@ -1,15 +1,7 @@
 const xui = require('../xui');
 
-xui.register ('xui-dialog',
+xui.register ('xui-dialog', 'xui-element',
 {
-	isRoot: true,
-
-	events: {
-		"click [data-action]": function(evt) {
-			this[evt.source.dataset.action] ();
-		}
-	},
-
 	init: function()
 	{
 		this.classList.add('xui-dialog');

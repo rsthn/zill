@@ -92,6 +92,7 @@ const xui = module.exports =
 
 			let bar = document.createElement('em');
 			bar.classList.add('vs-bar');
+			bar.classList.add('pseudo');
 
 			let innerBar = document.createElement('em');
 			bar.appendChild(innerBar);
@@ -101,12 +102,19 @@ const xui = module.exports =
 
 			target.appendChild(bar);
 
+			let update = function()
+			{
+				let height = target.getBoundingClientRect().height;
+				innerMostBar.style.height = (100*height / target.scrollHeight).toFixed(2) + "%";
+
+				bar.style.top = target.scrollTop + "px";
+				innerMostBar.style.top = (100*target.scrollTop / target.scrollHeight).toFixed(2) + "%";
+			};
+
 			target._observer_scroll = new MutationObserver(function()
 			{
 				if (mutex) return;
-
 				mutex = true;
-				let height = target.getBoundingClientRect().height;
 
 				if (bar.parentNode != target)
 				{
@@ -116,19 +124,11 @@ const xui = module.exports =
 					target.appendChild(bar);
 				}
 
-				mutex= false;
+				update();
+				mutex = false;
 			});
 
-			target._observer_scroll.observe(target, { childList: true });
-
-			let update = function()
-			{
-				let height = target.getBoundingClientRect().height;
-				innerMostBar.style.height = (100*height / target.scrollHeight).toFixed(2) + "%";
-				bar.style.top = target.scrollTop + "px";
-				innerMostBar.style.top = (100*target.scrollTop / target.scrollHeight).toFixed(2) + "%";
-			};
-
+			target._observer_scroll.observe (target, { childList: true });
 			update();
 
 			target.onwheel = function (evt)
@@ -139,5 +139,132 @@ const xui = module.exports =
 				innerMostBar.style.top = (100*target.scrollTop / target.scrollHeight).toFixed(2) + "%";
 			};
 		}
+	},
+
+	/**
+	**	Forces the browser to show a download dialog.
+	*/
+	showDownload: function (filename, dataUrl)
+	{
+		var link = document.createElement("a");
+		link.href = dataUrl;
+
+		link.style.display = 'none';
+		link.download = filename;
+		link.target = "_blank";
+
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	},
+
+	/**
+	**	Forces the browser to show a file selection dialog.
+	*/
+	showFilePicker: function (allowMultiple, callback)
+	{
+		var input = document.createElement("input");
+
+		input.type = "file";
+		input.style.display = 'none';
+		input.multiple = allowMultiple;
+
+		document.body.appendChild(input);
+
+		input.onchange = function ()
+		{
+			if (input._timer) clearTimeout(input._timer);
+
+			document.body.onfocus = null;
+			document.body.removeChild(input);
+
+			callback(input.files);
+		};
+
+		document.body.onfocus = function ()
+		{
+			document.body.onfocus = null;
+
+			input._timer = setTimeout(function()
+			{
+				document.body.removeChild(input);
+				callback(null);
+			},
+			0);
+		};
+
+		input.click();
+	},
+
+	/**
+	**	Loads a URL using FileReader and returns as a dataURL.
+	*/
+	loadAsDataURL: function (file, callback)
+	{
+		var reader = new FileReader();
+
+		reader.onload = function(e) {
+			callback (e.target.result);
+		};
+
+		reader.readAsDataURL(file);
+	},
+
+	/**
+	**	Loads a URL using FileReader and returns as text.
+	*/
+	loadAsText: function (file, callback)
+	{
+		var reader = new FileReader();
+
+		reader.onload = function(e) {
+			callback (e.target.result);
+		};
+
+		reader.readAsText(file);
+	},
+
+	/**
+	**	Loads a URL using FileReader and returns as an array buffer.
+	*/
+	loadAsArrayBuffer: function (file, callback)
+	{
+		var reader = new FileReader();
+
+		reader.onload = function(e) {
+			callback (e.target.result);
+		};
+
+		reader.readAsArrayBuffer(file);
+	},
+
+	/**
+	**	Loads an array of URLs using FileReader and returns them as data url.
+	*/
+	loadAllAsDataURL: function (fileList, callback)
+	{
+		var result = [];
+
+		if (!fileList || !fileList.length)
+		{
+			callback(result);
+			return;
+		}
+
+		var loadNext = function (i)
+		{
+			if (i == fileList.length)
+			{
+				callback(result);
+				return;
+			}
+
+			xui.loadAsDataURL (fileList[i], function(url) {
+				result.push({ name: fileList[i].name, size: fileList[i].size, url: url });
+				loadNext(i+1);
+			});
+		};
+
+		loadNext(0);
 	}
 };

@@ -7,6 +7,10 @@ xui.register ('xui-element',
 	events: {
 		"click [data-action]": function(evt) {
 			this[evt.source.dataset.action] ();
+		},
+
+		"keyup(13) input[data-enter]": function(evt) {
+			this[evt.source.dataset.enter] ();
 		}
 	},
 

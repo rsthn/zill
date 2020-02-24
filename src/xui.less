@@ -2,7 +2,7 @@
 
 .repeat-px(@list, @prefix, @prop, @sel:~'', @i:1) when (@i <= length(@list)) {
 	@value: extract(@list, @i);
-	.@{prefix}-@{value} @{sel} { @{prop}: @value*@px; }
+	.@{prefix}-@{i} @{sel} { @{prop}: @value*@px; }
 	.repeat-px(@list, @prefix, @prop, @sel, @i+1);
 }
 
@@ -17,7 +17,6 @@
 	.@{prefix}-@{value} @{sel} { @{prop}: @value; }
 	.repeat(@list, @prefix, @prop, @sel, @i+1);
 }
-
 
 /* ************************** */
 html {
@@ -35,12 +34,9 @@ html {
 	cursor: if(@cursor="", default, e(%("url(%a) 2 2, auto", @cursor)));
 }
 
-
 /* ************************** */
 .repeat-imp(@display-modes, d, display);
 
-
-/* ************************** */
 .repeat-px(@sizes, p, padding);
 .repeat-px(@sizes, pl, padding-left);
 .repeat-px(@sizes, pr, padding-right);
@@ -59,6 +55,30 @@ html {
 .repeat-px(@sizes, ch-mt, margin-top, ~'> *');
 .repeat-px(@sizes, ch-mb, margin-bottom, ~'> *');
 
+.pixelated {
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -o-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    -ms-interpolation-mode: nearest-neighbor;
+    image-rendering: pixelated;
+}
+
+.float-left { float: left; }
+.float-right { float: right; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-left { text-align: left; }
+.text-justify { text-align: justify; }
+
+.flex-row { display: flex; flex-flow: row; }
+.flex-col { display: flex; flex-flow: column; }
+
+.flex-row > * { flex: 1 1 0; }
+.flex-col > * { flex: 1 1 0; }
+
+.flex-even { flex: 1 1 0; }
+.flex-static { flex: 0 0 auto; }
+.flex-fill { flex: 1 1 auto; }
 
 /* ************************** */
 @import "./css/x-scrollable.less";
@@ -68,4 +88,7 @@ html {
 @import "./css/xui-dialog.less";
 @import "./css/xui-list.less";
 @import "./css/xui-dropdown.less";
+@import "./css/xui-context.less";
 @import "./css/xui-menubar.less";
+@import "./css/xui-panel.less";
+@import "./css/xui-image-list.less";

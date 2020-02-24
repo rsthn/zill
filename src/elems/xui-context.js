@@ -7,6 +7,7 @@ xui.register ('xui-context',
 	init: function()
 	{
 		this.classList.add('xui-dropdown');
+		this.classList.add('xui-context');
 	},
 
 	onConnected: function()

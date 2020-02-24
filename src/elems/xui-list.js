@@ -20,9 +20,7 @@ xui.register ('xui-list',
 		}
 
 		if (this.classList.contains('x-scrollable'))
-		{
 			xui.scrollable.attach(this);
-		}
 	},
 
 	setValue: function (value)

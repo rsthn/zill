@@ -9,7 +9,7 @@
     "watch": "npm-run-all --parallel watch-css watch-js",
     "build-css": "lessc src/xui.less dist/xui.css",
     "watch-css": "less-watch-compiler src/css dist ../xui.less",
-    "build-js": "browserify src/main.js | uglifyjs > dist/xui.js",
+    "build-js": "browserify --preserve-symlinks src/main.js | uglifyjs > dist/xui.js",
     "watch-js": "watchify --preserve-symlinks src/main.js -o dist/xui.js -v"
   },
   "bin": {
