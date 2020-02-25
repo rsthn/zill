@@ -14,14 +14,14 @@
 
 @keyframes dialog-visible
 {
-    to {
-		transform: scale(1.0) perspective(100*@px) translateZ(0*@px) rotateX(0deg);
-		opacity: 1.0;
-	}
-
     from {
 		transform: scale(0.1) perspective(100*@px) translateZ(-300*@px) rotateX(30deg);
 		opacity: 0.0;
+	}
+
+    to {
+		transform: scale(1.0) perspective(100*@px) translateZ(0*@px) rotateX(0deg);
+		opacity: 1.0;
 	}
 }
 
@@ -44,10 +44,20 @@
 	animation-timing-function: cubic-bezier(0.550, 0.055, 0.675, 0.190);
 }
 
+.xui-dialog.hidden.imm {
+	transform: scale(0.1) perspective(100*@px) translateZ(-300*@px) rotateX(30deg) !important;
+	opacity: 0.0 !important;
+}
+
 .xui-dialog.visible {
 	display: flex !important;
 	animation-name: dialog-visible; animation-duration: 0.350s; animation-fill-mode: both;
 	animation-timing-function: cubic-bezier(0.165, 0.840, 0.440, 1.000);
+}
+
+.xui-dialog.visible.imm {
+	transform: scale(1.0) perspective(100*@px) translateZ(0*@px) rotateX(0deg) !important;
+	opacity: 1.0 !important;
 }
 
 /* ****************************************** */

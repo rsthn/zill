@@ -448,13 +448,13 @@ html {
   }
 }
 @keyframes dialog-visible {
-  to {
-    transform: scale(1) perspective(7.14285714rem) translateZ(0rem) rotateX(0deg);
-    opacity: 1;
-  }
   from {
     transform: scale(0.1) perspective(7.14285714rem) translateZ(-21.42857143rem) rotateX(30deg);
     opacity: 0;
+  }
+  to {
+    transform: scale(1) perspective(7.14285714rem) translateZ(0rem) rotateX(0deg);
+    opacity: 1;
   }
 }
 /* ****************************************** */
@@ -487,12 +487,20 @@ html {
   animation-fill-mode: both;
   animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
 }
+.xui-dialog.hidden.imm {
+  transform: scale(0.1) perspective(7.14285714rem) translateZ(-21.42857143rem) rotateX(30deg) !important;
+  opacity: 0 !important;
+}
 .xui-dialog.visible {
   display: flex !important;
   animation-name: dialog-visible;
   animation-duration: 0.35s;
   animation-fill-mode: both;
   animation-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.xui-dialog.visible.imm {
+  transform: scale(1) perspective(7.14285714rem) translateZ(0rem) rotateX(0deg) !important;
+  opacity: 1 !important;
 }
 /* ****************************************** */
 /* HEADER */

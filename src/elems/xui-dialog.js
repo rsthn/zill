@@ -10,22 +10,26 @@ xui.register ('xui-dialog', 'xui-element',
 			xui.draggable.attach(this.querySelector('.header'), this);
 	},
 
-	show: function()
+	show: function(imm)
 	{
 		if (this.classList.contains('visible'))
 			return;
 
-		this.classList.remove('hidden');
+		this.classList.remove('imm', 'hidden');
 		this.classList.add('visible');
+
+		if (imm) this.classList.add('imm');
 	},
 
-	hide: function()
+	hide: function(imm)
 	{
 		if (this.classList.contains('hidden'))
 			return;
 
-		this.classList.remove('visible');
+		this.classList.remove('imm', 'visible');
 		this.classList.add('hidden');
+
+		if (imm) this.classList.add('imm');
 	},
 
 	maximize: function()
