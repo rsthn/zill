@@ -1,8 +1,14 @@
 @import (reference) "./css/constants.less";
 
-.repeat-px(@list, @prefix, @prop, @sel:~'', @i:1) when (@i <= length(@list)) {
-	@value: extract(@list, @i);
+.repeat-px(@list, @prefix, @prop, @sel:~'', @i:0) when (@i < length(@list)) {
+	@value: extract(@list, @i+1);
 	.@{prefix}-@{i} @{sel} { @{prop}: @value*@px; }
+	.repeat-px(@list, @prefix, @prop, @sel, @i+1);
+}
+
+.repeat-px-imp(@list, @prefix, @prop, @sel:~'', @i:0) when (@i < length(@list)) {
+	@value: extract(@list, @i+1);
+	.@{prefix}-@{i} @{sel} { @{prop}: @value*@px !important; }
 	.repeat-px(@list, @prefix, @prop, @sel, @i+1);
 }
 

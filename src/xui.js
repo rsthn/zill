@@ -21,12 +21,22 @@ const xui = module.exports =
 		return Math.round(value/step)*step;
 	},
 
+	overlapTest: function (rect1, rect2)
+	{
+		var _x1 = Math.max(rect1.left, rect2.left);
+		var _y1 = Math.max(rect1.top, rect2.top);
+		var _x2 = Math.min(rect1.right, rect2.right);
+		var _y2 = Math.min(rect1.bottom, rect2.bottom);
+	
+		return Math.max(0, _y2-_y1) * Math.max(0, _x2-_x1) > 0;	
+	},
+
 	position:
 	{
 		get: function (elem)
 		{
 			let p = elem.getBoundingClientRect();
-			return { x: p.left, y: p.top };
+			return { x: p.left, y: p.top, width: p.width, height: p.height };
 		},
 
 		set: function (elem, ...args)
@@ -36,6 +46,7 @@ const xui = module.exports =
 
 			elem.style.position = 'absolute';
 			elem.style.margin = 0;
+			elem.style.transform = 'translateX(0) translateY(0)';
 
 			elem.style.left = args[0] + 'px';
 			elem.style.top = args[1] + 'px';
@@ -54,7 +65,8 @@ const xui = module.exports =
 
 			if (!this.initialized)
 			{
-				window.onmousemove = this._handler.bind(this);
+				window.addEventListener('mousemove', this._mousemove.bind(this), true);
+				window.addEventListener('mouseup', this._mouseup.bind(this), true);
 				this.initialized = true;
 			}
 
@@ -64,28 +76,38 @@ const xui = module.exports =
 				this.state.pos = xui.position.get(this.state.target = target);
 				this.state.enabled = true;
 			};
-
-			handle.onmouseup = (evt) => {
-				this.state.enabled = false;
-			};
 		},
 
-		_handler: function (evt)
+		_mousemove: function (evt)
 		{
 			if (!this.state.enabled)
 				return;
+
+			evt.preventDefault();
+			evt.stopPropagation();
 
 			let dx = evt.clientX - this.state.sx;
 			let dy = evt.clientY - this.state.sy;
 
 			xui.position.set (this.state.target, this.state.pos.x + dx, this.state.pos.y + dy);
+
+			if ('onDraggableMoved' in this.state.target)
+				this.state.target.onDraggableMoved(this.state.pos.x + dx, this.state.pos.y + dy);
+		},
+
+		_mouseup: function (evt)
+		{
+			if (this.state.enabled)
+			{
+				this.state.enabled = false;
+				evt.preventDefault();
+				evt.stopPropagation();
+			}
 		}
 	},
 
 	scrollable:
 	{
-		initialized: false,
-
 		attach: function (target)
 		{
 			let mutex = false;
@@ -138,6 +160,167 @@ const xui = module.exports =
 				bar.style.top = target.scrollTop + "px";
 				innerMostBar.style.top = (100*target.scrollTop / target.scrollHeight).toFixed(2) + "%";
 			};
+		}
+	},
+
+	editable:
+	{
+		/*
+		**	Attaches an editable to the specified target. The callback(new_value, old_value) is called when an event on the input happens (blur, ENTER-key, ESC-key),
+		**	and if the callback returns false editing will continue (and the input will be re-focused), if the callback returns true nothing will be done, and if
+		**	any other value is returned, it will be used as the new text content of the target. A new_value of null is sent to the callback when ESC or onblur happens.
+		*/
+		attach: function (target, prev_value, callback)
+		{
+			if (target.querySelector('.inline-input') != null)
+				return;
+
+			if (prev_value == null)
+				prev_value = target.innerText.trim();
+
+			let input = document.createElement('input');
+			input.className = 'inline-input';
+			input.type = 'text';
+			input.value = prev_value;
+
+			let fn = function (cur_value)
+			{
+				let new_value = callback(cur_value, prev_value);
+				if (new_value === true) return;
+
+				if (new_value !== false)
+				{
+					target.classList.remove('p-relative');
+					target.innerText = new_value;
+				}
+				else
+				{
+					setTimeout(() => {
+						input.select();
+						input.focus();
+					}, 100);
+				}
+			};
+
+			input.onblur = () => fn(null)
+
+			input.onkeydown = (evt) =>
+			{
+				if (evt.keyCode == 27 || evt.keyCode == 13)
+				{
+					evt.preventDefault();
+					evt.stopPropagation();
+				}
+
+				if (evt.keyCode == 27)
+					return input.onblur();
+
+				if (evt.keyCode == 13)
+					fn(input.value.trim());
+			};
+
+			target.classList.add('p-relative');
+			target.appendChild(input);
+
+			input.select();
+			input.focus();
+		}
+	},
+
+	selectable:
+	{
+		initialized: false,
+
+		state: 0,
+		sx: 0, sy: 0, limit: null,
+		rect: { left: 0, top: 0, right: 0, bottom: 0 },
+
+		div: null,
+
+		attach: function (target)
+		{
+			if (!this.initialized)
+			{
+				this.div = document.createElement('div');
+				this.div.style.position = 'absolute';
+				this.div.style.zIndex = '99999';
+				this.div.style.left = '0px';
+				this.div.style.top = '0px';
+				this.div.style.background = 'rgba(255,255,255,0.25)';
+				this.div.style.border = '1px solid rgba(0,0,0,0.5)';
+				document.body.appendChild (this.div);
+
+				window.addEventListener('mousemove', (evt) =>
+				{
+					if (!this.state) return;
+	
+					evt.preventDefault();
+					evt.stopPropagation();
+	
+					this.rect.left = Math.max(Math.min(this.sx, evt.clientX), this.limit.left);
+					this.rect.top = Math.max(Math.min(this.sy, evt.clientY), this.limit.top);
+					this.rect.right = Math.min(Math.max(this.sx, evt.clientX), this.limit.right);
+					this.rect.bottom = Math.min(Math.max(this.sy, evt.clientY), this.limit.bottom);
+
+					this.div.style.left = this.rect.left + 'px';
+					this.div.style.top = this.rect.top + 'px';
+					this.div.style.width = (this.rect.right - this.rect.left) + 'px';
+					this.div.style.height = (this.rect.bottom - this.rect.top) + 'px';
+				},
+				true);
+
+				window.addEventListener('mouseup', (evt) =>
+				{
+					if (!this.state) return;
+
+					this.div.style.left = '-1000px';
+					this.div.style.top = '-1000px';
+
+					this.state = 0;
+
+					let list = [];
+
+					for (let i of this.target.selection)
+						i.classList.remove('selected');
+
+					for (let i of this.target.children)
+					{
+						if (xui.overlapTest(this.rect, i.getBoundingClientRect()))
+						{
+							i.classList.add('selected');
+							list.push(i);
+						}
+					}
+
+					this.target.selection = list;
+
+					if ('onSelectionChanged' in this.target)
+						this.target.onSelectionChanged (this.target.selection);
+				});
+
+				this.initialized = true;
+			}
+
+			target.unselectable ='on';
+			target.style.userSelect = 'none';
+			target.selection = [];
+
+			target.addEventListener('mousedown', (evt) =>
+			{
+				if (evt.which != 1)	return
+
+				this.limit = target.getBoundingClientRect();
+				this.target = target;
+				this.state = 1;
+
+				this.sx = evt.clientX;
+				this.sy = evt.clientY;
+
+				this.rect.left = this.sx-1;
+				this.rect.top = this.sy-1;
+				this.rect.right = this.sx+1;
+				this.rect.bottom = this.sy+1;
+			});
 		}
 	},
 

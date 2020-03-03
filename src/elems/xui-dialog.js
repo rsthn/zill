@@ -18,7 +18,7 @@ xui.register ('xui-dialog', 'xui-element',
 		this.classList.remove('imm', 'hidden');
 		this.classList.add('visible');
 
-		if (imm) this.classList.add('imm');
+		if (imm === true) this.classList.add('imm');
 	},
 
 	hide: function(imm)
@@ -29,7 +29,7 @@ xui.register ('xui-dialog', 'xui-element',
 		this.classList.remove('imm', 'visible');
 		this.classList.add('hidden');
 
-		if (imm) this.classList.add('imm');
+		if (imm === true) this.classList.add('imm');
 	},
 
 	maximize: function()

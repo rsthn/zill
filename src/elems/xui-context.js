@@ -24,23 +24,15 @@ xui.register ('xui-context',
 
 		this._contextListener = this.root.listen ('contextmenu', this.dataset.target, (evt) =>
 		{
-			evt.continuePropagation = true;
-
 			this.classList.add('visible');
 			this._source = evt.source;
 
-			let hdl = (evt) => {
-				if (evt.type == 'contextmenu' && evt.source === this._source)
-					return;
-
+			let hdl = () => {
 				this.classList.remove('visible');
-
-				window.removeEventListener('click', hdl);
-				window.removeEventListener('contextmenu', hdl);
+				window.removeEventListener('mouseup', hdl, true);
 			};
 
-			window.addEventListener('click', hdl);
-			window.addEventListener('contextmenu', hdl);
+			window.addEventListener('mouseup', hdl, true);
 
 			let parent = xui.position.get(this.root);
 			xui.position.set(this, evt.clientX - parent.x, evt.clientY - parent.y);

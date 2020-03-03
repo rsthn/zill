@@ -12,8 +12,27 @@
 	<link rel="stylesheet" href="normalize.css" />
 	<link rel="stylesheet" href="xui.css?r=10" />
 	<link rel="stylesheet" href="font-default.css" />
-
 	<script src="xui.js"></script>
+
+	<script>
+		xui.register('my-dialog', 'xui-dialog',
+		{
+			isRoot: true,
+
+			init: function()
+			{
+			},
+
+			rename: function(evt)
+			{
+				xui.editable.attach (evt.source, null, function (new_value, prev_value)
+				{
+					return new_value === null ? prev_value : new_value;
+				});
+			}
+		});
+	</script>
+
 </head>
 
 <body class="xui-app">
@@ -76,7 +95,7 @@
 		</span>
 	</div>
 
-	<xui-dialog class="x-draggable" style="left: 50%; margin-left: -300px; top: 40px; width: 750px; height: 400px;">
+	<my-dialog class="x-draggable centered-x" style="width: 750px; height: 400px;">
 
 		<div class="header">
 			<b><i class="fas fa-leaf"></i> Sample</b>
@@ -86,16 +105,16 @@
 			</span>
 		</div>
 
-		<div class="content p-8">
+		<div class="content p-3">
 
-			<div class="mb-16">
+			<div class="mb-4">
 				<button class="btn sm"><i class="fas fa-plus-circle"></i> Add ...</button>
 				<button class="btn sm"><i class="fas fa-plus-square"></i> Add from Spritesheet ...</button>
 			</div>
 
-			<div class="row ch-ml-4 ch-mr-4">
+			<div class="flex-row ch-ml-2 ch-mr-2">
 				<div>
-					<label class="d-block mb-4">Primary Category:</label>
+					<label class="d-block mb-2">Primary Category:</label>
 					<xui-list class="x-scrollable" data-rows="5">
 						<span>Option 1
 							<em>12,12,45</em>
@@ -123,7 +142,7 @@
 						<span>Option 10</span>
 					</xui-list>
 
-					<div class="input-group mt-6">
+					<div class="input-group mt-3">
 						<input type="text" placeholder="Category Name"/>
 						<span>
 							<i class="fas fa-plus"></i>
@@ -132,15 +151,17 @@
 				</div>
 
 				<div>
-					<label class="d-block mb-4">Group:</label>
+					<label class="d-block mb-2">Group:</label>
 					<xui-list class="x-scrollable my-items" data-rows="5">
-						<span>Option 1</span>
-						<span>Option 2</span>
-						<span>Option 3</span>
-						<span>Option 4</span>
-						<span>Option 5</span>
-						<span>Option 6</span>
+						<span data-index="1">Option 1</span>
+						<span data-index="2">Option 2</span>
+						<span data-index="3">Option 3</span>
+						<span data-index="4">Option 4</span>
+						<span data-index="5">Option 5</span>
+						<span data-index="6">Option 6</span>
 					</xui-list>
+
+					<input type="text" class="input-field mt-3" placeholder="Category Name"/>
 				</div>
 			</div>
 
@@ -149,88 +170,12 @@
 			<xui-context class="compact" data-target=".my-items > span">
 				<ul>
 					<li><em>Title</em></li>
-					<li><b>Awesome 1</b></li>
-					<li><b>Awesome 2</b></li>
-					<li></li>
-					<li><b>Awesome 3</b></li>
-					<!--<li><b>Lorem ipsum dolor sit amet, this is very nice and should work fine.</b></li>-->
-					<li class="sub-menu">
-						<b>Awesome 4</b>
-						<ul>
-							<li><b>Test 1</b></li>
-							<li><b>Test 1</b></li>
-							<li></li>
-							<li><b>Test 1</b></li>
-							<li><b>Test 1</b></li>
-							<li><b>Test 1</b></li>
-						</ul>
-					</li>
-					<li><b>Awesome 4</b></li>
-					<li><b>Awesome 4</b></li>
-					<li><b>Awesome 4</b></li>
-					<li><b>Awesome 4</b></li>
-					<li><b>Awesome 4</b></li>
+					<li><b data-action="rename">Rename ...</b></li>
 				</ul>
 			</xui-context>
-
-			<div class="xui-dropdown compact">
-				<b>General</b>
-				<ul>
-					<li><em>Title</em></li>
-					<li><b>Awesome 1</b></li>
-					<li><b>Awesome 2</b></li>
-					<li></li>
-					<li><b>Awesome 3</b></li>
-					<!--<li><b>Lorem ipsum dolor sit amet, this is very nice and should work fine.</b></li>-->
-					<li class="sub-menu">
-						<b>Awesome 4</b>
-						<ul>
-							<li><b>Test 1</b></li>
-							<li><b>Test 1</b></li>
-							<li></li>
-							<li><b>Test 1</b></li>
-							<li><b>Test 1</b></li>
-							<li><b>Test 1</b></li>
-						</ul>
-					</li>
-					<li><b>Awesome 4</b></li>
-					<li><b>Awesome 4</b></li>
-					<li><b>Awesome 4</b></li>
-					<li><b>Awesome 4</b></li>
-					<li><b>Awesome 4</b></li>
-				</ul>
-			</div>
-
-			<div class="xui-dropdown">
-				<b>General</b>
-				<ul>
-					<li><em>Title</em></li>
-					<li><b>Awesome 1</b></li>
-					<li><b><i class="fas fa-check"></i> Awesome 2</b></li>
-					<li></li>
-					<li><b>Awesome 3</b></li>
-					<li><b>Awesome 4</b></li>
-					<li class="sub-menu">
-						<b>Awesome 4</b>
-						<ul>
-							<li><b>Test 1</b></li>
-							<li><b>Test 1</b></li>
-							<li></li>
-							<li><b>Test 1</b></li>
-							<li><b>Test 1</b></li>
-							<li><b>Test 1</b></li>
-						</ul>
-					</li>
-					<li><b>Awesome 4</b></li>
-					<li><b>Awesome 4</b></li>
-					<li><b>Awesome 4</b></li>
-					<li><b>Awesome 4</b></li>
-					<li><b>Awesome 4</b></li>
-				</ul>
-			</div>
 		</div>
 
-	</xui-dialog>
+	</my-dialog>
 
 </body>
 

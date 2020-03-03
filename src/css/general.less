@@ -10,25 +10,27 @@
 }
 
 /* ************************** */
-.repeat-imp(@display-modes, d, display);
+.repeat-imp(none inline inline-block block, d, display);
+.repeat-imp(absolute relative fixed inline, p, position);
 
-.repeat-px(@sizes, p, padding);
-.repeat-px(@sizes, pl, padding-left);
-.repeat-px(@sizes, pr, padding-right);
-.repeat-px(@sizes, pt, padding-top);
-.repeat-px(@sizes, pb, padding-bottom);
+@sizes: 0 2 4 8 16 32;
+.repeat-px-imp(@sizes, p, padding);
+.repeat-px-imp(@sizes, pl, padding-left);
+.repeat-px-imp(@sizes, pr, padding-right);
+.repeat-px-imp(@sizes, pt, padding-top);
+.repeat-px-imp(@sizes, pb, padding-bottom);
 
-.repeat-px(@sizes, m, margin);
-.repeat-px(@sizes, ml, margin-left);
-.repeat-px(@sizes, mr, margin-right);
-.repeat-px(@sizes, mt, margin-top);
-.repeat-px(@sizes, mb, margin-bottom);
+.repeat-px-imp(@sizes, m, margin);
+.repeat-px-imp(@sizes, ml, margin-left);
+.repeat-px-imp(@sizes, mr, margin-right);
+.repeat-px-imp(@sizes, mt, margin-top);
+.repeat-px-imp(@sizes, mb, margin-bottom);
 
-.repeat-px(@sizes, ch-m, margin, ~'> *');
-.repeat-px(@sizes, ch-ml, margin-left, ~'> *');
-.repeat-px(@sizes, ch-mr, margin-right, ~'> *');
-.repeat-px(@sizes, ch-mt, margin-top, ~'> *');
-.repeat-px(@sizes, ch-mb, margin-bottom, ~'> *');
+.repeat-px-imp(@sizes, ch-m, margin, ~'> *');
+.repeat-px-imp(@sizes, ch-ml, margin-left, ~'> *');
+.repeat-px-imp(@sizes, ch-mr, margin-right, ~'> *');
+.repeat-px-imp(@sizes, ch-mt, margin-top, ~'> *');
+.repeat-px-imp(@sizes, ch-mb, margin-bottom, ~'> *');
 
 .pixelated {
     image-rendering: -moz-crisp-edges;
@@ -55,8 +57,12 @@
 .flex-static { flex: 0 0 auto; }
 .flex-fill { flex: 1 1 auto; }
 
-.flex-row .flex-fill { width: 0; }
-.flex-col .flex-fill { height: 0; }
+.flex-row > .flex-fill { width: 0; }
+.flex-col > .flex-fill { height: 0; }
+
+.fill-parent {
+	position: absolute; left: 0; top: 0; width: 100%; height: 100%; box-sizing: border-box;
+}
 
 /* ************************** */
 .input-group {
@@ -85,6 +91,29 @@
 
 .input-group > span:hover {
     background: rgba(0,0,0,0.2);
+}
+
+/* ************************** */
+.input-field {
+    display: block; overflow: hidden;
+	border: 1px solid @border-color-mid; background: @background-lighter;
+	box-shadow: inset 0px 4px 6px -5px @shadow-color-hard; border-radius: @border-radius-smaller;
+	padding: 5*@px 8*@px; cursor: text; color: @text-lighter; width: 100%; box-sizing: border-box;
+}
+
+select.input-field {
+	cursor: default;
+}
+
+.input-field:focus {
+	color: @text-base;
+}
+
+/* ************************** */
+.inline-input {
+    background: @text-base; color: @border-color-lo; font-weight: bold;
+    position: absolute; margin: 0; left: 0; top: 0; width: 100%; height: 100%;
+    padding: inherit; border: inherit; box-sizing: border-box;
 }
 
 /* ************************** */

@@ -1,0 +1,2 @@
+
+globalThis.xui = require('./main');
