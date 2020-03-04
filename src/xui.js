@@ -56,12 +56,16 @@ const xui = module.exports =
 	draggable:
 	{
 		initialized: false,
-		state: { enabled: false, sx: 0, sy: 0, pos: null, target: null },
 
-		attach: function (handle, target, options)
+		state: { enabled: false, sx: 0, sy: 0, pos: null, target: null },
+		group: { },
+
+		attach: function (handle, target, group)
 		{
 			if (!handle || !target)
 				return;
+
+			if (!group) group = 'default';
 
 			if (!this.initialized)
 			{
@@ -70,11 +74,32 @@ const xui = module.exports =
 				this.initialized = true;
 			}
 
-			handle.onmousedown = (evt) => {
+			if (!(group in this.group))
+				this.group[group] = { max: 800, list: [ ] };
+
+			target.style.zIndex = this.group[group].max++;
+			this.group[group].list.push(target);
+
+			target.front = () =>
+			{
+				target.style.zIndex = this.group[group].max;
+
+				for (let i of this.group[group].list)
+					i.style.zIndex--;
+
+				if ('onFront' in target)
+					target.onFront();
+			};
+
+			handle.onmousedown = (evt) =>
+			{
 				this.state.sx = evt.clientX;
 				this.state.sy = evt.clientY;
-				this.state.pos = xui.position.get(this.state.target = target);
+				this.state.target = target;
+				this.state.pos = xui.position.get(target);
 				this.state.enabled = true;
+
+				target.front();
 			};
 		},
 

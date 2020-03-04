@@ -7,7 +7,7 @@ xui.register ('xui-dialog', 'xui-element',
 		this.classList.add('xui-dialog');
 
 		if (this.classList.contains('x-draggable'))
-			xui.draggable.attach(this.querySelector('.header'), this);
+			xui.draggable.attach(this.querySelector('.header'), this, 'xui-dialog');
 	},
 
 	show: function(imm)
@@ -19,6 +19,8 @@ xui.register ('xui-dialog', 'xui-element',
 		this.classList.add('visible');
 
 		if (imm === true) this.classList.add('imm');
+
+		if ('front' in this) this.front();
 		return true;
 	},
 
