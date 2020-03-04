@@ -456,6 +456,7 @@ html {
 }
 select.input-field {
   cursor: default;
+  padding: 0.28571429rem 0.57142857rem;
 }
 .input-field:focus {
   color: #eee;
