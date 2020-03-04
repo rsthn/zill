@@ -16,11 +16,42 @@ xui.register ('xui-list',
 		if (this.dataset.rows)
 		{
 			this.style.height = '0px';
-			this.style.height = (this.dataset.rows*this.getHeight(this.children[0]) + this.getHeight()) + 'px';
+			this.baseHeight = this.getHeight();
 		}
 
 		if (this.classList.contains('x-scrollable'))
 			xui.scrollable.attach(this);
+	},
+
+	onConnected: function()
+	{
+		if (!this.dataset.rows)
+			return;
+
+		if (this._observer == null)
+		{
+			this._observer = new MutationObserver (() =>
+			{
+				if (this.children.length == 0 || this.children[0].tagName != 'SPAN')
+					return;
+
+				const h = this.getHeight(this.children[0]);
+				if (h == this.itemHeight) return;
+
+				this.itemHeight = h;
+				this.style.height = (this.dataset.rows*this.itemHeight + this.baseHeight) + 'px';
+			});
+		}
+
+		this._observer.observe (this, { childList: true });
+	},
+
+	onDisconnected: function()
+	{
+		if (!this.dataset.rows)
+			return;
+
+		this._observer.disconnect();
 	},
 
 	setValue: function (value)

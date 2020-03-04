@@ -371,6 +371,10 @@ html {
 .text-justify {
   text-align: justify;
 }
+.no-text {
+  font-size: 0;
+  line-height: 0;
+}
 .flex-row {
   display: flex;
   flex-flow: row;
@@ -988,8 +992,6 @@ select.input-field {
   border-radius: 0.21428571rem;
   border: 1px solid #060e12;
   background: #1d2529;
-  font-size: 0;
-  line-height: 0;
 }
 .xui-image-list img {
   border: 1px solid rgba(0, 0, 0, 0.8);
