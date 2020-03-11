@@ -18,10 +18,11 @@
 	.repeat-imp(@list, @prefix, @prop, @sel, @i+1);
 }
 
-.repeat(@list, @prefix, @prop, @sel:~'', @i:1) when (@i <= length(@list)) {
-	@value: extract(@list, @i);
-	.@{prefix}-@{value} @{sel} { @{prop}: @value; }
-	.repeat(@list, @prefix, @prop, @sel, @i+1);
+.repeat-b(@list, @prefix, @prop, @sel:~'', @i:1) when (@i <= length(@list)) {
+	@value1: extract(@list, @i);
+	@value2: extract(@list, @i+1);
+	.@{prefix}-@{value1} @{sel} { @{prop}: @value2; }
+	.repeat-b(@list, @prefix, @prop, @sel, @i+2);
 }
 
 /* ************************** */

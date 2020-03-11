@@ -13,6 +13,10 @@
 .repeat-imp(none inline inline-block block, d, display);
 .repeat-imp(absolute relative fixed inline, p, position);
 
+@sizes2: 0 0% 5 5% 10 10% 15 15% 20 20% 25 25% 30 30% 35 35% 40 40% 45 45% 50 50% 55 55% 60 60% 65 65% 70 70% 75 75% 80 80% 85 85% 90 90% 95 95% 100 100%;
+.repeat-b(@sizes2, w, width);
+.repeat-b(@sizes2, h, height);
+
 @sizes: 0 2 4 8 16 32;
 .repeat-px-imp(@sizes, p, padding);
 .repeat-px-imp(@sizes, pl, padding-left);
@@ -144,4 +148,14 @@ select.input-field {
 
 .btn.sm {
 	padding: 3*@px 8*@px; font-size: 0.9rem;
+}
+
+/* ************************** */
+fieldset {
+    padding: 8px; border: none;
+    border: 1px solid rgba(255,255,255,0.25);
+}
+
+fieldset legend {
+    padding: 0 8px; text-align: center; color: rgba(255,255,255,0.5);
 }
