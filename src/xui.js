@@ -381,24 +381,13 @@ const xui = module.exports =
 
 		input.onchange = function ()
 		{
-			if (input._timer) clearTimeout(input._timer);
-
-			document.body.onfocus = null;
-			document.body.removeChild(input);
-
 			callback(input.files);
 		};
 
 		document.body.onfocus = function ()
 		{
 			document.body.onfocus = null;
-
-			input._timer = setTimeout(function()
-			{
-				document.body.removeChild(input);
-				callback(null);
-			},
-			0);
+			document.body.removeChild(input);
 		};
 
 		input.click();

@@ -643,6 +643,11 @@ fieldset legend {
   text-align: center;
   color: rgba(255, 255, 255, 0.5);
 }
+hr {
+  border-top: 1px solid #2d3539;
+  border-bottom: 1px solid #4d5559;
+  margin: 12px 0;
+}
 /* **** */
 .x-scrollable {
   overflow: hidden;
@@ -864,6 +869,20 @@ fieldset legend {
 .xui-list > span.selected {
   background: #1d2529;
 }
+.xui-list > span i {
+  color: #000;
+  font-size: 0.8em;
+  padding: 2px 3px;
+  border-radius: 2px;
+}
+.xui-list > span.selected i {
+  background: rgba(0, 0, 0, 0.3);
+  color: #aaa;
+}
+.xui-list > span i:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: #000;
+}
 /* ****************************************** */
 .xui-dropdown {
   display: inline-block;
@@ -908,7 +927,7 @@ fieldset legend {
   font-style: normal;
   text-shadow: 0px -1px 0px #000;
 }
-.xui-dropdown.no-icons li > b {
+.xui-dropdown.x-no-icons li > b {
   padding: 0.35714286rem 2.57142857rem 0.35714286rem 0.85714286rem;
 }
 .xui-dropdown li > em {
@@ -924,7 +943,7 @@ fieldset legend {
   margin-right: 0.28571429rem;
   font-size: 0.85em;
 }
-.xui-dropdown.no-icons li > b > i {
+.xui-dropdown.x-no-icons li > b > i {
   display: none;
 }
 .xui-dropdown:hover > b {
@@ -970,23 +989,23 @@ fieldset legend {
   animation: fast-blink 0.25s 1;
 }
 /* ****************************************** */
-.xui-dropdown.compact {
+.xui-dropdown.x-compact {
   font-size: 1rem;
 }
-.xui-dropdown.compact li > b {
+.xui-dropdown.x-compact li > b {
   padding: 0.28571429rem 2.28571429rem 0.28571429rem 2rem;
 }
-.xui-dropdown.compact li > em {
+.xui-dropdown.x-compact li > em {
   padding: 0.28571429rem 2.28571429rem 0.28571429rem 0.85714286rem;
 }
-.xui-dropdown.compact.no-icons li > b {
+.xui-dropdown.x-compact.x-no-icons li > b {
   padding: 0.28571429rem 2.28571429rem 0.28571429rem 0.85714286rem;
 }
-.xui-dropdown.compact li > b > i {
+.xui-dropdown.x-compact li > b > i {
   margin-left: -1.28571429rem;
   margin-right: 0.28571429rem;
 }
-.xui-dropdown.compact li.sub-menu:before {
+.xui-dropdown.x-compact li.sub-menu:before {
   margin-top: 0.21428571rem;
   margin-right: 0.42857143rem;
 }
@@ -1148,4 +1167,24 @@ fieldset legend {
 }
 .xui-image-list img.selected {
   border: 1px solid #8fc;
+}
+/* ****************************************** */
+.xui-tabs {
+  display: block;
+  padding: 0;
+  margin-bottom: 0.28571429rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2);
+}
+.xui-tabs a {
+  display: inline-block;
+  padding: 0.28571429rem 1.14285714rem;
+  cursor: default;
+  border-radius: 0.21428571rem 0.21428571rem 0 0;
+}
+.xui-tabs a:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+.xui-tabs a.active {
+  background: rgba(0, 0, 0, 0.5);
 }

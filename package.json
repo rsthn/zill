@@ -29,8 +29,8 @@
   },
   "homepage": "https://github.com/rsthn/xui#readme",
   "dependencies": {
-    "@rsthn/rin": "^2.0.3",
-    "@rsthn/rin-front": "^1.0.1"
+    "@rsthn/rin": "^2.0.9",
+    "@rsthn/rin-front": "^1.0.6"
   },
   "optionalDependencies": {
     "browserify": "^16.5.0",

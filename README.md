@@ -1,6 +1,6 @@
 # XUI 2
 
-The XUI toolkit was born because we at RedStar Technologies (RSTHN) like very much to create web-based tools. And we often saw the need to have a standard way to define common UI elements to speed up our development process.
+The XUI toolkit was born because we at RedStar Technologies (RSTHN) like very much to create web-based tools. And we often found the need to have a standard way to define common UI elements to speed up our development process.
 
 ## Installation
 
@@ -12,6 +12,6 @@ npm install @rsthn/rin
 npm install -g @rsthn/xui --no-optional
 ```
 
-## Components
+## Elements
 
-View the ELEMENTDS.md file to view all currently available XUI components and how to use them.
+The [ELEMENTDS.md](./docs/ELEMENTS.md) file in the [docs](./docs/) folder contains all the currently available XUI elements and their respective documentation.

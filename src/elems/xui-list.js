@@ -1,6 +1,26 @@
+/*
+**	xui/elems/xui-list
+**
+**	Copyright (c) 2019-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 const xui = require('../xui');
 
-xui.register ('xui-list',
+/*
+**	Options List
+*/
+
+xui.register ('xui-list', 'xui-element',
 {
 	events: {
 		"click span[data-value]": function(evt) {
@@ -8,7 +28,7 @@ xui.register ('xui-list',
 		}
 	},
 
-	init: function()
+	ready: function()
 	{
 		this.classList.add('xui-list');
 		this.type = 'field';
@@ -28,9 +48,9 @@ xui.register ('xui-list',
 		if (!this.dataset.rows)
 			return;
 
-		if (this._observer == null)
+		if (this.__observer == null)
 		{
-			this._observer = new MutationObserver (() =>
+			this.__observer = new MutationObserver (() =>
 			{
 				if (this.children.length == 0 || this.children[0].tagName != 'SPAN')
 					return;
@@ -43,7 +63,7 @@ xui.register ('xui-list',
 			});
 		}
 
-		this._observer.observe (this, { childList: true });
+		this.__observer.observe (this, { childList: true });
 	},
 
 	onDisconnected: function()
@@ -51,7 +71,7 @@ xui.register ('xui-list',
 		if (!this.dataset.rows)
 			return;
 
-		this._observer.disconnect();
+		this.__observer.disconnect();
 	},
 
 	setValue: function (value)

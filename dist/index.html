@@ -8,29 +8,43 @@
 
 	<script src="https://kit.fontawesome.com/8162187dae.js" crossorigin="anonymous"></script>
 
-	<link rel="stylesheet" href="lib/xui/normalize.css" />
-	<link rel="stylesheet" href="lib/xui/xui.css" />
-	<link rel="stylesheet" href="lib/xui/font-default.css" />
+	<link rel="stylesheet" href="normalize.css" />
+	<link rel="stylesheet" href="xui.css" />
+	<link rel="stylesheet" href="font-default.css" />
 
-	<script src="lib/xui/xui.js"></script>
+	<script src="xui.js"></script>
 </head>
 
 <body class="xui-app">
 
-	<xui-dialog class="x-draggable" style="left: 50%; margin-left: -300px; top: 40px;">
-
+	<xui-dialog class="x-draggable x-buttons-hidden x-title-center x-title-bold">
 		<div class="header">
-			<b><i class="fas fa-leaf"></i> Sample</b>
-
-			<span>
-				<i data-action="hide" class="fas fa-times"></i>
-			</span>
+			<b>Sample</b>
 		</div>
 
-		<div class="content" style="padding: 24px 160px;">
-			Hello World
-		</div>
+		<div class="content p-4 text-center">
 
+			<xui-tabs data-container="div.tab-container" data-default="tab_b">
+				<a data-name="tab_a">Tab A</a>
+				<a data-name="tab_b">Tab B</a>
+				<a data-name="tab_c">Tab C</a>
+			</xui-tabs>
+			
+			<div class="tab-container p-3">
+				<div data-name="tab_a">
+					Content for Tab A.
+				</div>
+			
+				<div data-name="tab_b">
+					Content for Tab B.
+				</div>
+
+				<div data-name="tab_c">
+					Content for Tab C.
+				</div>
+			</div>
+
+		</div>
 	</xui-dialog>
 
 </body>

@@ -1,4 +1,5 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+(function (global){
 /*
 **	rin/api
 **
@@ -17,7 +18,7 @@
 
 const base64 = require('base-64');
 
-if (!('fetch' in globalThis))
+if (!('fetch' in global))
 	var fetch = require('node-fetch');
 
 /**
@@ -61,9 +62,9 @@ module.exports =
 	*/
 	responseFilter: function (res, req)
 	{
-		if (res.response == 408 && globalThis.location)
+		if (res.response == 408 && global.location)
 		{
-			globalThis.location.reload();
+			global.location.reload();
 			return false;
 		}
 
@@ -156,9 +157,9 @@ module.exports =
 	*/
 	_showProgress: function ()
 	{
-		if ('document' in globalThis) {
+		if ('document' in global) {
 			this._requestLevel++;
-			if (this._requestLevel > 0) globalThis.document.documentElement.classList.add('busy');
+			if (this._requestLevel > 0) global.document.documentElement.classList.add('busy');
 		}
 	},
 
@@ -167,9 +168,9 @@ module.exports =
 	*/
 	_hideProgress: function ()
 	{
-		if ('document' in globalThis) {
+		if ('document' in global) {
 			this._requestLevel--;
-			if (!this._requestLevel) globalThis.document.documentElement.classList.remove('busy');
+			if (!this._requestLevel) global.document.documentElement.classList.remove('busy');
 		}
 	},
 
@@ -269,7 +270,9 @@ module.exports =
 	}
 };
 
-},{"base-64":4,"node-fetch":5}],2:[function(require,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"base-64":20,"node-fetch":21}],2:[function(require,module,exports){
+(function (global){
 /*
 **	rin/element
 **
@@ -300,9 +303,14 @@ const Element = module.exports =
 	protos: { },
 
 	/**
-	**	Indicates if the element is a root element, that is, the target element to attach elements having data-ref attribute.
+	**	Indicates if the element is a root element, that is, the target element to attach child elements having data-ref attribute.
 	*/
-	isRoot: false,
+	isRoot: true,
+
+	/**
+	**	All children elements having data-ref are added to this map (and to the element itself).
+	*/
+	refs: null,
 
 	/**
 	**	Model type (class) for the element's model.
@@ -328,6 +336,8 @@ const Element = module.exports =
 		this._list_visible = [];
 		this._list_property = [];
 
+		this.refs = { };
+
 		if (this.model != null)
 		{
 			let tmp = this.model;
@@ -335,6 +345,7 @@ const Element = module.exports =
 			this.setModel (tmp);
 		}
 
+		this.isReady = false;
 		this.init();
 
 		Object.keys(this._super).reverse().forEach(i =>
@@ -346,7 +357,60 @@ const Element = module.exports =
 		if (this.events)
 			this.bindEvents (this.events);
 
-		this.collectWatchers();
+		const ready = () =>
+		{
+			this.ready();
+			this.isReady = true;
+
+			Object.keys(this._super).reverse().forEach(i =>
+			{
+				if ('ready' in this._super[i])
+					this._super[i].ready();
+			});
+
+			this.collectWatchers();
+
+			if (this.root && this.root._mutationHandler)
+				this.root._mutationHandler();
+		};
+
+		let timeout = null;
+
+		this._mutationHandler = () =>
+		{
+			if (this.children.length == 0)
+				return;
+
+			for (let i in this.refs)
+			{
+				if (!this.refs[i].isReady) return;
+			}
+
+			if (timeout) clearTimeout(timeout);
+
+			timeout = setTimeout(() =>
+			{
+				timeout = null;
+
+				for (let i in this.refs)
+				{
+					if (!this.refs[i].isReady) return;
+				}
+
+				this._mutationHandler = null;
+
+				this._mutationObserver.disconnect();
+				this._mutationObserver = null;
+
+				ready();
+			},
+			50);
+		};
+
+		this._mutationObserver = new MutationObserver (this._mutationHandler);
+		this._mutationObserver.observe(this, { attributes: false, childList: true, subtree: false });
+
+		this._mutationHandler();
 	},
 
 	/**
@@ -355,6 +419,15 @@ const Element = module.exports =
 	**	>> void init();
 	*/
 	init: function()
+	{
+	},
+
+	/**
+	**	Executed when the children of the element are ready.
+	**
+	**	>> void ready();
+	*/
+	ready: function()
 	{
 	},
 
@@ -584,6 +657,12 @@ const Element = module.exports =
 	*/
 	setInnerHTML: function (value)
 	{
+		if (this._mutationObserver != null)
+		{
+			this.innerHTML = value;
+			return;
+		}
+
 		this.innerHTML = value;
 		this.collectWatchers();
 	},
@@ -631,7 +710,7 @@ const Element = module.exports =
 		list = this.querySelectorAll("[data-property]");
 		for (let i = 0; i < list.length; i++)
 		{
-			list[i].onchange = function()
+			list[i].onchange = list[i].onblur = function()
 			{
 				switch (this.type)
 				{
@@ -648,6 +727,14 @@ const Element = module.exports =
 						break;
 				}
 			};
+
+			if (list[i].tagName == 'SELECT')
+			{
+				list[i].onmouseup = function()
+				{
+					self.getModel().set(this.name, this.value);
+				};
+			}
 
 			list[i].name = list[i].dataset.property;
 
@@ -890,7 +977,7 @@ const Element = module.exports =
 					elem = elem.parentElement;
 				}
 
-				return globalThis;
+				return global;
 			}
 
 			connectedCallback()
@@ -901,6 +988,8 @@ const Element = module.exports =
 					if (root)
 					{
 						root[this.dataset.ref] = this;
+						root.refs[this.dataset.ref] = this;
+
 						this.root = root;
 					}
 				}
@@ -924,6 +1013,8 @@ const Element = module.exports =
 					this.root.onRefRemoved (this.dataset.ref);
 
 					root[this.dataset.ref] = null;
+					root.refs[this.dataset.ref] = null;
+
 					this.root = null;
 				}
 
@@ -981,7 +1072,200 @@ const Element = module.exports =
 	}
 };
 
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"@rsthn/rin":13}],3:[function(require,module,exports){
+/*
+**	rin-front/elements
+**
+**	Copyright (c) 2013-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+module.exports =
+{
+	Tabs: require('./elems/r-tabs')
+};
+
+},{"./elems/r-tabs":4}],4:[function(require,module,exports){
+/*
+**	rin-front/elems/r-tabs
+**
+**	Copyright (c) 2019-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+/*
+	<r-tabs [data-container="div.tab-container"] [data-base-route="@"]>
+		<a data-name="home">Home</a>
+		<a data-name="users">Users</a>
+		<a data-name="products">Products</a>
+		<a data-name="account">Account</a>
+	</r-tabs>
+
+	<div class="tab-container">
+		<div data-name="home">
+			Home
+		</div>
+
+		<div data-name="users">
+			Users
+		</div>
+	</div>
+*/
+
+let Element = require('../element');
+let Router = require('../router');
+
+Element.register ('r-tabs',
+{
+	/**
+	**	Element events.
+	*/
+	events:
+	{
+		'click [data-name]': function (evt)
+		{
+			if (this.dataset.baseRoute)
+			{
+				window.location = "#" + this.dataset.baseRoute.replace('@', evt.source.dataset.name);
+				return;
+			}
+
+			this.selectTab (evt.source.dataset.name);
+		}
+	},
+
+	/**
+	**	Initializes the Tabs element.
+	*/
+	init: function()
+	{
+		this._routeHandler = (evt, args) =>
+		{
+			if (!args.route.changed)
+				return;
+
+			this._showTab (args.tabName);
+		};
+	},
+
+	/**
+	**	Executed when the children of the element are ready.
+	*/
+	ready: function()
+	{
+		if ("container" in this.dataset)
+			this.container = document.querySelector(this.dataset.container);
+		else
+			this.container = this.nextElementSibling;
+
+		this._hideTabsExcept(null);
+	},
+
+	/**
+	**	Adds a handler to Router if the data-base-route attribute was set.
+	*/
+	onConnected: function()
+	{
+		if (this.dataset.baseRoute)
+			Router.addRoute (this.dataset.baseRoute.replace('@', ':tabName'), this._routeHandler);
+	},
+
+	/**
+	**	Removes a handler previously added to Router if the data-base-route attribute was set.
+	*/
+	onDisconnected: function()
+	{
+		if (this.dataset.baseRoute)
+			Router.removeRoute(this.dataset.baseRoute.replace('@', ':tabName'), this._routeHandler);
+	},
+
+	/**
+	**	Hides all tabs except the one with the specified exceptName, if none specified then all tabs will be hidden (display: none), additionally
+	**	the respective link item in the tab definition will have class 'active'.
+	*/
+	_hideTabsExcept: function (exceptName)
+	{
+		if (this.container == null) return;
+
+		if (!exceptName) exceptName = '';
+
+		for (let i = 0; i < this.container.children.length; i++)
+		{
+			if (this.container.children[i].dataset.name == exceptName)
+			{
+				if (this.container.children[i].style.display == 'none')
+					this.dispatch('tab-activate', { el: this.container.children[i] });
+
+				this.container.children[i].style.display = 'block';
+			}
+			else
+			{
+				if (this.container.children[i].style.display == 'block')
+					this.dispatch('tab-deactivate', { el: this.container.children[i] });
+
+				this.container.children[i].style.display = 'none';
+			}
+		}
+
+		let links = this.querySelectorAll("[data-name]");
+
+		for (let i = 0; i < links.length; i++)
+		{
+			if (links[i].dataset.name == exceptName)
+				links[i].classList.add('active');
+			else
+				links[i].classList.remove('active');
+		}
+	},
+
+	/**
+	**	Shows the tab with the specified name.
+	*/
+	_showTab: function (name)
+	{
+		return this._hideTabsExcept (name);
+	},
+
+	/**
+	**	Selects a tab given its name.
+	*/
+	selectTab: function (name)
+	{
+		if (this.dataset.baseRoute)
+		{
+			const hash = "#" + this.dataset.baseRoute.replace('@', name);
+
+			if (window.location.hash != hash)
+			{
+				window.location = hash;
+				return;
+			}
+		}
+
+		this._showTab (name);
+	}
+});
+
+},{"../element":2,"../router":6}],5:[function(require,module,exports){
 /*
 **	rin-front/main
 **
@@ -1002,205 +1286,13 @@ module.exports =
 {
 	Router: require('./router'),
 	Element: require('./element'),
-	Api: require('./api')
+	Api: require('./api'),
+
+	Elements: require('./elements')
 };
 
-},{"./api":1,"./element":2,"./router":6}],4:[function(require,module,exports){
+},{"./api":1,"./element":2,"./elements":3,"./router":6}],6:[function(require,module,exports){
 (function (global){
-/*! http://mths.be/base64 v0.1.0 by @mathias | MIT license */
-;(function(root) {
-
-	// Detect free variables `exports`.
-	var freeExports = typeof exports == 'object' && exports;
-
-	// Detect free variable `module`.
-	var freeModule = typeof module == 'object' && module &&
-		module.exports == freeExports && module;
-
-	// Detect free variable `global`, from Node.js or Browserified code, and use
-	// it as `root`.
-	var freeGlobal = typeof global == 'object' && global;
-	if (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal) {
-		root = freeGlobal;
-	}
-
-	/*--------------------------------------------------------------------------*/
-
-	var InvalidCharacterError = function(message) {
-		this.message = message;
-	};
-	InvalidCharacterError.prototype = new Error;
-	InvalidCharacterError.prototype.name = 'InvalidCharacterError';
-
-	var error = function(message) {
-		// Note: the error messages used throughout this file match those used by
-		// the native `atob`/`btoa` implementation in Chromium.
-		throw new InvalidCharacterError(message);
-	};
-
-	var TABLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-	// http://whatwg.org/html/common-microsyntaxes.html#space-character
-	var REGEX_SPACE_CHARACTERS = /[\t\n\f\r ]/g;
-
-	// `decode` is designed to be fully compatible with `atob` as described in the
-	// HTML Standard. http://whatwg.org/html/webappapis.html#dom-windowbase64-atob
-	// The optimized base64-decoding algorithm used is based on @atk’s excellent
-	// implementation. https://gist.github.com/atk/1020396
-	var decode = function(input) {
-		input = String(input)
-			.replace(REGEX_SPACE_CHARACTERS, '');
-		var length = input.length;
-		if (length % 4 == 0) {
-			input = input.replace(/==?$/, '');
-			length = input.length;
-		}
-		if (
-			length % 4 == 1 ||
-			// http://whatwg.org/C#alphanumeric-ascii-characters
-			/[^+a-zA-Z0-9/]/.test(input)
-		) {
-			error(
-				'Invalid character: the string to be decoded is not correctly encoded.'
-			);
-		}
-		var bitCounter = 0;
-		var bitStorage;
-		var buffer;
-		var output = '';
-		var position = -1;
-		while (++position < length) {
-			buffer = TABLE.indexOf(input.charAt(position));
-			bitStorage = bitCounter % 4 ? bitStorage * 64 + buffer : buffer;
-			// Unless this is the first of a group of 4 characters…
-			if (bitCounter++ % 4) {
-				// …convert the first 8 bits to a single ASCII character.
-				output += String.fromCharCode(
-					0xFF & bitStorage >> (-2 * bitCounter & 6)
-				);
-			}
-		}
-		return output;
-	};
-
-	// `encode` is designed to be fully compatible with `btoa` as described in the
-	// HTML Standard: http://whatwg.org/html/webappapis.html#dom-windowbase64-btoa
-	var encode = function(input) {
-		input = String(input);
-		if (/[^\0-\xFF]/.test(input)) {
-			// Note: no need to special-case astral symbols here, as surrogates are
-			// matched, and the input is supposed to only contain ASCII anyway.
-			error(
-				'The string to be encoded contains characters outside of the ' +
-				'Latin1 range.'
-			);
-		}
-		var padding = input.length % 3;
-		var output = '';
-		var position = -1;
-		var a;
-		var b;
-		var c;
-		var d;
-		var buffer;
-		// Make sure any padding is handled outside of the loop.
-		var length = input.length - padding;
-
-		while (++position < length) {
-			// Read three bytes, i.e. 24 bits.
-			a = input.charCodeAt(position) << 16;
-			b = input.charCodeAt(++position) << 8;
-			c = input.charCodeAt(++position);
-			buffer = a + b + c;
-			// Turn the 24 bits into four chunks of 6 bits each, and append the
-			// matching character for each of them to the output.
-			output += (
-				TABLE.charAt(buffer >> 18 & 0x3F) +
-				TABLE.charAt(buffer >> 12 & 0x3F) +
-				TABLE.charAt(buffer >> 6 & 0x3F) +
-				TABLE.charAt(buffer & 0x3F)
-			);
-		}
-
-		if (padding == 2) {
-			a = input.charCodeAt(position) << 8;
-			b = input.charCodeAt(++position);
-			buffer = a + b;
-			output += (
-				TABLE.charAt(buffer >> 10) +
-				TABLE.charAt((buffer >> 4) & 0x3F) +
-				TABLE.charAt((buffer << 2) & 0x3F) +
-				'='
-			);
-		} else if (padding == 1) {
-			buffer = input.charCodeAt(position);
-			output += (
-				TABLE.charAt(buffer >> 2) +
-				TABLE.charAt((buffer << 4) & 0x3F) +
-				'=='
-			);
-		}
-
-		return output;
-	};
-
-	var base64 = {
-		'encode': encode,
-		'decode': decode,
-		'version': '0.1.0'
-	};
-
-	// Some AMD build optimizers, like r.js, check for specific condition patterns
-	// like the following:
-	if (
-		typeof define == 'function' &&
-		typeof define.amd == 'object' &&
-		define.amd
-	) {
-		define(function() {
-			return base64;
-		});
-	}	else if (freeExports && !freeExports.nodeType) {
-		if (freeModule) { // in Node.js or RingoJS v0.8.0+
-			freeModule.exports = base64;
-		} else { // in Narwhal or RingoJS v0.7.0-
-			for (var key in base64) {
-				base64.hasOwnProperty(key) && (freeExports[key] = base64[key]);
-			}
-		}
-	} else { // in Rhino or a web browser
-		root.base64 = base64;
-	}
-
-}(this));
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],5:[function(require,module,exports){
-(function (global){
-"use strict";
-
-// ref: https://github.com/tc39/proposal-global
-var getGlobal = function () {
-	// the only reliable means to get the global object is
-	// `Function('return this')()`
-	// However, this causes CSP violations in Chrome apps.
-	if (typeof self !== 'undefined') { return self; }
-	if (typeof window !== 'undefined') { return window; }
-	if (typeof global !== 'undefined') { return global; }
-	throw new Error('unable to locate global object');
-}
-
-var global = getGlobal();
-
-module.exports = exports = global.fetch;
-
-// Needed for TypeScript and Webpack.
-exports.default = global.fetch.bind(global);
-
-exports.Headers = global.Headers;
-exports.Request = global.Request;
-exports.Response = global.Response;
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],6:[function(require,module,exports){
 /*
 **	rin/router
 **
@@ -1389,8 +1481,8 @@ let _Router = module.exports =
 
 		this.alreadyAttached = true;
 
-		if ('onhashchange' in globalThis)
-			globalThis.onhashchange = this.onLocationChanged.bind(this);
+		if ('onhashchange' in global)
+			global.onhashchange = this.onLocationChanged.bind(this);
 	},
 
 	/**
@@ -1414,7 +1506,7 @@ let _Router = module.exports =
 		if (location == this.location) return;
 
 		if (silent) this.ignoreHashchangeEvent++;
-		globalThis.location.hash = location;
+		global.location.hash = location;
 	},
 
 	/**
@@ -1596,7 +1688,7 @@ let _Router = module.exports =
 
 		if (cLocation != rLocation)
 		{
-			globalThis.location.replace("#" + rLocation);
+			global.location.replace("#" + rLocation);
 			return;
 		}
 
@@ -1616,6 +1708,7 @@ let _Router = module.exports =
 
 _Router.init();
 
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"@rsthn/rin":13}],7:[function(require,module,exports){
 /*
 **	rin/alpha
@@ -1784,7 +1877,7 @@ Rin.override = function (output, ...objs)
 
 
 /*
-**	Compares two objects and returns a boolean if all properties in "partial" find a match in "full".
+**	Compares two objects and returns `true` if all properties in "partial" find a match in "full".
 */
 Rin.partialCompare = function (full, partial)
 {
@@ -1804,8 +1897,9 @@ Rin.partialCompare = function (full, partial)
 
 
 /*
-**	Performs a partial search for an object (o) in the specified array and returns its index or false
-**	if the object was not found.
+**	Performs a partial search for an object (o) in the specified array and returns its index or `false` if the
+**	object was not found. When `getObject` is set to `true` the object will be returned instead of an index, or
+**	`null` if not found.
 */
 Rin.arrayFind = function (arr, o, getObject)
 {
@@ -1850,7 +1944,7 @@ Rin.escape = function (str)
 
 
 /**
-**	Verifies if the specified object is of class m, if not it will create a new instance.
+**	Verifies if the specified object is of class `m`, if not it will create a new instance of `m` passing `o` as parameter.
 **
 **	>> object ensureTypeOf (class m, object o);
 */
@@ -1881,9 +1975,9 @@ Rin.serialize = function (o)
 
 
 /**
-**	Deserializes a string in JSON format and returns an object.
+**	Deserializes a string in JSON format and returns the result.
 **
-**	>> object deserialize (string s);
+**	>> any deserialize (string s);
 */
 Rin.deserialize = function (s)
 {
@@ -1926,7 +2020,7 @@ Class._class = Class;
 
 
 /**
-**	Contains the named constructors of each of the super classes.
+**	Contains the methods of each of the super classes.
 */
 Class._super = { };
 
@@ -1938,7 +2032,7 @@ Class.prototype.className = "Class";
 
 
 /**
-**	Instance constructor.
+**	Class constructor, should initialize the state of the instance. Invoked when the `new` keyword is used with the class.
 */
 Class.prototype.__ctor = function ()
 {
@@ -1946,18 +2040,20 @@ Class.prototype.__ctor = function ()
 
 
 /**
-**	Instance initialization.
+**	Class destructor, should clear the instance state and release any used resources, invoked when the global `dispose`
+**	function is called with the instance as parameter.
 */
-Class.prototype.__init = function ()
+Class.prototype.__dtor = function ()
 {
 };
 
 
 /**
-**	Returns true if the object is an instance of the specified class (verifies inheritance).
+**	Returns true if the object is an instance of the specified class (verifies inheritance), the `class` parameter can be a class
+**	name, a class constructor or a class instance, in any case the appropriate checks will be done.
 **
 **	>> bool isInstanceOf (string className);
-**	>> bool isInstanceOf (class classConstructor);
+**	>> bool isInstanceOf (constructor classConstructor);
 **	>> bool isInstanceOf (object classInstance);
 */
 Class.prototype.isInstanceOf = function (className)
@@ -1996,11 +2092,12 @@ Class.prototype._initSuperRefs = function ()
 
 
 /**
-**	Extends the class with the specified prototype. The prototype can be a function (class constructor) or an object. Note that
-**	the class will be modified (and returned) instead of creating a new class, must be called at the class-level (not instance level),
-**	when a class is provided all fields starting with uppercase at the class-level (not prototype) will not be inherited.
+**	Extends the class with the specified prototype. The prototype can be a function (class constructor) or an object. Note that the
+**	class will be modified (and returned) instead of creating a new class. Must be called at the class-level (**not** instance level).
+**	When a class is provided all fields starting with uppercase at the class-level will not be inherited, this is used to create constants
+**	on classes without having them to be copied to derived classes.
 **
-**	>> class inherit (function classConstructor);
+**	>> class inherit (constructor classConstructor);
 **	>> class inherit (object obj);
 */
 Class.inherit = function (proto)
@@ -2071,9 +2168,9 @@ Class.prototype._extend = function (base, protos)
 
 
 /**
-**	Creates a new class with the specified prototypes each of which can be a class constructor (function) or an object.
+**	Creates a new class with the specified prototypes each of which can be a class constructor or an object.
 **
-**	>> object extend (object... protos);
+**	>> constructor extend (object... protos);
 */
 Class.extend = function (...protos)
 {
@@ -2082,7 +2179,7 @@ Class.extend = function (...protos)
 
 
 /**
-**	Creates a new instance by extending the class first with the specified prototype.
+**	Creates a new instance of a class resulting from extending the self class with the specified prototype.
 **
 **	>> object create (object proto);
 */
@@ -2657,6 +2754,7 @@ module.exports = Class.extend
 });
 
 },{"./class":8,"./event":11}],11:[function(require,module,exports){
+(function (global){
 /*
 **	rin/event
 **
@@ -2813,7 +2911,7 @@ module.exports = Class.extend
 				}
 				else
 				{
-					if (globalThis[this.list[this.i].handler].call (null, this, this.args, this.list[this.i].data) === false)
+					if (global[this.list[this.i].handler].call (null, this, this.args, this.list[this.i].data) === false)
 						break;
 				}
 			}
@@ -2866,6 +2964,7 @@ module.exports = Class.extend
 	}
 });
 
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./alpha":7,"./class":8}],12:[function(require,module,exports){
 /*
 **	rin/flattenable
@@ -2886,7 +2985,8 @@ module.exports = Class.extend
 let Class = require('./class');
 
 /**
-**	Flattenable class used to add flattening and unflattening capabilities to any object.
+**	Class used to add flattening and unflattening capabilities to any object. A "flat" object is an object composed
+**	only of native types, that is: `null,` `boolean`, `integer`, `number`, `array` or `object`.
 */
 
 module.exports = Class.extend
@@ -4453,7 +4553,7 @@ let Schema = module.exports =
 		});
 	},
 
-	Numeric: function (precision)
+	Number: function (precision)
 	{
 		return Schema.Type
 		({
@@ -5202,7 +5302,7 @@ let Template = module.exports =
 		{
 			if (s.length != 1)
 				return s.join('');
-	
+
 			return s[0];
 		}
 	
@@ -5261,7 +5361,7 @@ Template.filters =
 	**
 	**	json <expr>
 	*/
-	'json': function(args)
+	'json': function (args)
 	{
 		return JSON.stringify(args[1], null, 4);
 	},
@@ -5271,7 +5371,7 @@ Template.filters =
 	**
 	**	set <var-name> <expr>
 	*/
-	'set': function(args, parts, data)
+	'set': function (args, parts, data)
 	{
 		data[args[1]] = args[2];
 		return '';
@@ -5282,7 +5382,7 @@ Template.filters =
 	**
 	**	trim <expr>
 	*/
-	'trim': function(args)
+	'trim': function (args)
 	{
 		return args[1] ? (typeof(args[1]) == "object" ? args[1].map(e => e.trim()) : args[1].trim()) : '';
 	},
@@ -5292,7 +5392,7 @@ Template.filters =
 	**
 	**	upper <expr>
 	*/
-	'upper': function(args)
+	'upper': function (args)
 	{
 		return args[1] ? (typeof(args[1]) == "object" ? args[1].map(e => e.toUpperCase()) : args[1].toUpperCase()) : '';
 	},
@@ -5302,7 +5402,7 @@ Template.filters =
 	**
 	**	lower <expr>
 	*/
-	'lower': function(args)
+	'lower': function (args)
 	{
 		return args[1] ? (typeof(args[1]) == "object" ? args[1].map(e => e.toLowerCase()) : args[1].toLowerCase()) : '';
 	},
@@ -5312,7 +5412,7 @@ Template.filters =
 	**
 	**	nl2br <expr>
 	*/
-	'nl2br': function(args)
+	'nl2br': function (args)
 	{
 		return args[1] ? (typeof(args[1]) == "object" ? args[1].map(e => e.replace(/\n/g, "<br/>")) : args[1].replace(/\n/g, "<br/>")) : '';
 	},
@@ -5322,7 +5422,7 @@ Template.filters =
 	**
 	**	% <tag-name> <expr>
 	*/
-	'%': function(args)
+	'%': function (args)
 	{
 		args.shift();
 		var name = args.shift();
@@ -5331,7 +5431,7 @@ Template.filters =
 
 		for (let i = 0; i < args.length; i++)
 		{
-			if (typeof(args[i]) != 'string')
+			if (typeof(args[i]) == 'object' && ('length' in args[i]))
 			{
 				for (let j = 0; j < args[i].length; j++)
 					s += `<${name}>${args[i][j]}</${name}>`;
@@ -5348,7 +5448,7 @@ Template.filters =
 	**
 	**	%% <tag-name> [<attr> <value>]* [<content>]
 	*/
-	'%%': function(args)
+	'%%': function (args)
 	{
 		args.shift();
 		var name = args.shift();
@@ -5372,7 +5472,7 @@ Template.filters =
 	**
 	**	join <string-expr> <array-expr>
 	*/
-	'join': function(args)
+	'join': function (args)
 	{
 		if (args[2] && typeof(args[2]) == "object" && "join" in args[2])
 			return args[2].join(args[1]);
@@ -5385,7 +5485,7 @@ Template.filters =
 	**
 	**	split <string-expr> <expr>
 	*/
-	'split': function(args)
+	'split': function (args)
 	{
 		if (args[2] && typeof(args[2]) == "string")
 			return args[2].split(args[1]);
@@ -5398,7 +5498,7 @@ Template.filters =
 	**
 	**	keys <object-expr>
 	*/
-	'keys': function(args)
+	'keys': function (args)
 	{
 		if (args[1] && typeof(args[1]) == "object")
 			return Object.keys(args[1]);
@@ -5411,7 +5511,7 @@ Template.filters =
 	**
 	**	values <object-expr>
 	*/
-	'values': function(args)
+	'values': function (args)
 	{
 		if (args[1] && typeof(args[1]) == "object")
 			return Object.values(args[1]);
@@ -5427,15 +5527,23 @@ Template.filters =
 	**
 	**	each <list-expr> [<varname:i>] <template>
 	*/
-	'each': function(args, parts, data)
+	'_each': function (parts, data)
 	{
 		let var_name = 'i';
-		let list = args[1];
+		let list = Template.expand(parts[1], data, 'arg');
 
 		let k = 2;
 
-		if (args[k] && args[k].match(/^[A-Za-z0-9_-]+$/) != null)
-			var_name = args[k++];
+		try {
+			let tmp = Template.expand(parts[k], data, 'arg');
+
+			if (tmp && tmp.match(/^[A-Za-z0-9_-]+$/) != null) {
+				var_name = tmp;
+				k++;
+			}
+		}
+		catch(e) {
+		}
 
 		let s = [];
 		let j = 0;
@@ -5447,7 +5555,7 @@ Template.filters =
 			data[var_name + '#'] = i;
 
 			for (let j = k; j < parts.length; j++)
-				s.push(Template.expand(parts[j], data, 'obj'));
+				s.push(Template.expand(parts[j], data, 'text'));
 		}
 
 		delete data[var_name];
@@ -5462,7 +5570,7 @@ Template.filters =
 	**
 	**	? <expr> <valueA> [<valueB>]
 	*/
-	'_?': function(parts, data)
+	'_?': function (parts, data)
 	{
 		if (Template.expand(parts[1], data, 'arg'))
 			return Template.expand(parts[2], data, 'arg');
@@ -5478,7 +5586,7 @@ Template.filters =
 	**
 	**	if <expr> <value> [elif <expr> <value>] [else <value>]
 	*/
-	'_if': function(parts, data)
+	'_if': function (parts, data)
 	{
 		for (let i = 0; i < parts.length; i += 3)
 		{
@@ -5497,7 +5605,7 @@ Template.filters =
 	**
 	**	switch <expr> <case1> <value1> ... <caseN> <valueN> default <defvalue> 
 	*/
-	'_switch': function(parts, data)
+	'_switch': function (parts, data)
 	{
 		let value = Template.expand(parts[1], data, 'arg');
 
@@ -5505,7 +5613,7 @@ Template.filters =
 		{
 			let case_value = Template.expand(parts[i], data, 'arg');
 			if (case_value == value || case_value == 'default')
-				return Template.expand(parts[i+1], data, 'arg');
+				return Template.expand(parts[i+1], data, 'text');
 		}
 
 		return '';
@@ -5516,7 +5624,7 @@ Template.filters =
 	**
 	**	repeat [<from>] <count> [<varname:i>] <template>
 	*/
-	'repeat': function(args, parts, data)
+	'repeat': function (args, parts, data)
 	{
 		let var_name = 'i';
 		let count = ~~args[1];
@@ -5540,17 +5648,251 @@ Template.filters =
 			data[var_name] = i;
 
 			for (let j = k; j < parts.length; j++)
-				s.push(Template.expand(parts[j], data, 'obj'));
+				s.push(Template.expand(parts[j], data, 'text'));
 		}
 
 		delete data[var_name];
 
 		return s;
+	},
+
+	/**
+	**	Loads the contents of the expression (map or array) in the global data map, fields/indices in the map/array will
+	**	therefore be directly accessible afterwards.
+	**
+	**	load <expr>
+	*/
+	'_load': function (parts, data)
+	{
+		let obj = Template.expand(parts[1], data, 'arg');
+
+		if (typeof(obj) != 'object')
+			return '';
+
+		for (let i in obj)
+			data[i] = obj[i];
+
+		return '';
 	}
 };
 
 },{}],20:[function(require,module,exports){
+(function (global){
+/*! http://mths.be/base64 v0.1.0 by @mathias | MIT license */
+;(function(root) {
+
+	// Detect free variables `exports`.
+	var freeExports = typeof exports == 'object' && exports;
+
+	// Detect free variable `module`.
+	var freeModule = typeof module == 'object' && module &&
+		module.exports == freeExports && module;
+
+	// Detect free variable `global`, from Node.js or Browserified code, and use
+	// it as `root`.
+	var freeGlobal = typeof global == 'object' && global;
+	if (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal) {
+		root = freeGlobal;
+	}
+
+	/*--------------------------------------------------------------------------*/
+
+	var InvalidCharacterError = function(message) {
+		this.message = message;
+	};
+	InvalidCharacterError.prototype = new Error;
+	InvalidCharacterError.prototype.name = 'InvalidCharacterError';
+
+	var error = function(message) {
+		// Note: the error messages used throughout this file match those used by
+		// the native `atob`/`btoa` implementation in Chromium.
+		throw new InvalidCharacterError(message);
+	};
+
+	var TABLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+	// http://whatwg.org/html/common-microsyntaxes.html#space-character
+	var REGEX_SPACE_CHARACTERS = /[\t\n\f\r ]/g;
+
+	// `decode` is designed to be fully compatible with `atob` as described in the
+	// HTML Standard. http://whatwg.org/html/webappapis.html#dom-windowbase64-atob
+	// The optimized base64-decoding algorithm used is based on @atk’s excellent
+	// implementation. https://gist.github.com/atk/1020396
+	var decode = function(input) {
+		input = String(input)
+			.replace(REGEX_SPACE_CHARACTERS, '');
+		var length = input.length;
+		if (length % 4 == 0) {
+			input = input.replace(/==?$/, '');
+			length = input.length;
+		}
+		if (
+			length % 4 == 1 ||
+			// http://whatwg.org/C#alphanumeric-ascii-characters
+			/[^+a-zA-Z0-9/]/.test(input)
+		) {
+			error(
+				'Invalid character: the string to be decoded is not correctly encoded.'
+			);
+		}
+		var bitCounter = 0;
+		var bitStorage;
+		var buffer;
+		var output = '';
+		var position = -1;
+		while (++position < length) {
+			buffer = TABLE.indexOf(input.charAt(position));
+			bitStorage = bitCounter % 4 ? bitStorage * 64 + buffer : buffer;
+			// Unless this is the first of a group of 4 characters…
+			if (bitCounter++ % 4) {
+				// …convert the first 8 bits to a single ASCII character.
+				output += String.fromCharCode(
+					0xFF & bitStorage >> (-2 * bitCounter & 6)
+				);
+			}
+		}
+		return output;
+	};
+
+	// `encode` is designed to be fully compatible with `btoa` as described in the
+	// HTML Standard: http://whatwg.org/html/webappapis.html#dom-windowbase64-btoa
+	var encode = function(input) {
+		input = String(input);
+		if (/[^\0-\xFF]/.test(input)) {
+			// Note: no need to special-case astral symbols here, as surrogates are
+			// matched, and the input is supposed to only contain ASCII anyway.
+			error(
+				'The string to be encoded contains characters outside of the ' +
+				'Latin1 range.'
+			);
+		}
+		var padding = input.length % 3;
+		var output = '';
+		var position = -1;
+		var a;
+		var b;
+		var c;
+		var d;
+		var buffer;
+		// Make sure any padding is handled outside of the loop.
+		var length = input.length - padding;
+
+		while (++position < length) {
+			// Read three bytes, i.e. 24 bits.
+			a = input.charCodeAt(position) << 16;
+			b = input.charCodeAt(++position) << 8;
+			c = input.charCodeAt(++position);
+			buffer = a + b + c;
+			// Turn the 24 bits into four chunks of 6 bits each, and append the
+			// matching character for each of them to the output.
+			output += (
+				TABLE.charAt(buffer >> 18 & 0x3F) +
+				TABLE.charAt(buffer >> 12 & 0x3F) +
+				TABLE.charAt(buffer >> 6 & 0x3F) +
+				TABLE.charAt(buffer & 0x3F)
+			);
+		}
+
+		if (padding == 2) {
+			a = input.charCodeAt(position) << 8;
+			b = input.charCodeAt(++position);
+			buffer = a + b;
+			output += (
+				TABLE.charAt(buffer >> 10) +
+				TABLE.charAt((buffer >> 4) & 0x3F) +
+				TABLE.charAt((buffer << 2) & 0x3F) +
+				'='
+			);
+		} else if (padding == 1) {
+			buffer = input.charCodeAt(position);
+			output += (
+				TABLE.charAt(buffer >> 2) +
+				TABLE.charAt((buffer << 4) & 0x3F) +
+				'=='
+			);
+		}
+
+		return output;
+	};
+
+	var base64 = {
+		'encode': encode,
+		'decode': decode,
+		'version': '0.1.0'
+	};
+
+	// Some AMD build optimizers, like r.js, check for specific condition patterns
+	// like the following:
+	if (
+		typeof define == 'function' &&
+		typeof define.amd == 'object' &&
+		define.amd
+	) {
+		define(function() {
+			return base64;
+		});
+	}	else if (freeExports && !freeExports.nodeType) {
+		if (freeModule) { // in Node.js or RingoJS v0.8.0+
+			freeModule.exports = base64;
+		} else { // in Narwhal or RingoJS v0.7.0-
+			for (var key in base64) {
+				base64.hasOwnProperty(key) && (freeExports[key] = base64[key]);
+			}
+		}
+	} else { // in Rhino or a web browser
+		root.base64 = base64;
+	}
+
+}(this));
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],21:[function(require,module,exports){
+(function (global){
+"use strict";
+
+// ref: https://github.com/tc39/proposal-global
+var getGlobal = function () {
+	// the only reliable means to get the global object is
+	// `Function('return this')()`
+	// However, this causes CSP violations in Chrome apps.
+	if (typeof self !== 'undefined') { return self; }
+	if (typeof window !== 'undefined') { return window; }
+	if (typeof global !== 'undefined') { return global; }
+	throw new Error('unable to locate global object');
+}
+
+var global = getGlobal();
+
+module.exports = exports = global.fetch;
+
+// Needed for TypeScript and Webpack.
+exports.default = global.fetch.bind(global);
+
+exports.Headers = global.Headers;
+exports.Request = global.Request;
+exports.Response = global.Response;
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],22:[function(require,module,exports){
+/*
+**	xui/elems/xui-context
+**
+**	Copyright (c) 2019-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 const xui = require('../xui');
+
+/*
+**	Context menu.
+*/
 
 xui.register ('xui-context',
 {
@@ -5615,8 +5957,28 @@ xui.register ('xui-context',
 	}
 });
 
-},{"../xui":26}],21:[function(require,module,exports){
+},{"../xui":29}],23:[function(require,module,exports){
+/*
+**	xui/elems/xui-dialog
+**
+**	Copyright (c) 2019-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 const xui = require('../xui');
+
+/*
+**	Dialog.
+*/
 
 xui.register ('xui-dialog', 'xui-element',
 {
@@ -5665,8 +6027,28 @@ xui.register ('xui-dialog', 'xui-element',
 	}
 });
 
-},{"../xui":26}],22:[function(require,module,exports){
+},{"../xui":29}],24:[function(require,module,exports){
+/*
+**	xui/elems/xui-element
+**
+**	Copyright (c) 2019-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 const xui = require('../xui');
+
+/*
+**	Base Element.
+*/
 
 xui.register ('xui-element',
 {
@@ -5684,13 +6066,35 @@ xui.register ('xui-element',
 
 	init: function()
 	{
+		if (this.dataset['isRoot'] == 'false')
+			this.isRoot = false;
 	}
 });
 
-},{"../xui":26}],23:[function(require,module,exports){
+},{"../xui":29}],25:[function(require,module,exports){
+/*
+**	xui/elems/xui-list
+**
+**	Copyright (c) 2019-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 const xui = require('../xui');
 
-xui.register ('xui-list',
+/*
+**	Options List
+*/
+
+xui.register ('xui-list', 'xui-element',
 {
 	events: {
 		"click span[data-value]": function(evt) {
@@ -5698,7 +6102,7 @@ xui.register ('xui-list',
 		}
 	},
 
-	init: function()
+	ready: function()
 	{
 		this.classList.add('xui-list');
 		this.type = 'field';
@@ -5718,9 +6122,9 @@ xui.register ('xui-list',
 		if (!this.dataset.rows)
 			return;
 
-		if (this._observer == null)
+		if (this.__observer == null)
 		{
-			this._observer = new MutationObserver (() =>
+			this.__observer = new MutationObserver (() =>
 			{
 				if (this.children.length == 0 || this.children[0].tagName != 'SPAN')
 					return;
@@ -5733,7 +6137,7 @@ xui.register ('xui-list',
 			});
 		}
 
-		this._observer.observe (this, { childList: true });
+		this.__observer.observe (this, { childList: true });
 	},
 
 	onDisconnected: function()
@@ -5741,7 +6145,7 @@ xui.register ('xui-list',
 		if (!this.dataset.rows)
 			return;
 
-		this._observer.disconnect();
+		this.__observer.disconnect();
 	},
 
 	setValue: function (value)
@@ -5770,20 +6174,130 @@ xui.register ('xui-list',
 	}
 });
 
-},{"../xui":26}],24:[function(require,module,exports){
+},{"../xui":29}],26:[function(require,module,exports){
+/*
+**	xui/elems/xui-tabs
+**
+**	Copyright (c) 2019-2020, RedStar Technologies, All rights reserved.
+**	https://www.rsthn.com/
+**
+**	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+**	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+**	PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL REDSTAR TECHNOLOGIES BE LIABLE FOR ANY
+**	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+**	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+**	OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+**	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+**	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+const xui = require('../xui');
+
+/*
+**	Tabs.
+*/
+
+xui.register ('xui-tabs',
+{
+	events:
+	{
+		'click [data-name]': function (evt) {
+			this.selectTab (evt.source.dataset.name);
+		}
+	},
+
+	init: function()
+	{
+		this.classList.add('xui-tabs');
+	},
+
+	/**
+	**	Executed when the children of the element are ready.
+	*/
+	ready: function()
+	{
+		if ('container' in this.dataset)
+			this.container = document.querySelector(this.dataset.container);
+		else
+			this.container = this.nextElementSibling;
+
+		if ('default' in this.dataset)
+			this._hideTabsExcept(this.dataset.default);
+		else
+			this._hideTabsExcept(null);
+	},
+
+	/**
+	**	Hides all tabs except the one with the specified exceptName, if none specified then all tabs will be hidden (display: none), additionally
+	**	the respective link item in the tab definition will have class 'active'.
+	*/
+	_hideTabsExcept: function (exceptName)
+	{
+		if (this.container == null) return;
+
+		if (!exceptName) exceptName = '';
+
+		for (let i = 0; i < this.container.children.length; i++)
+		{
+			if (this.container.children[i].dataset.name == exceptName)
+			{
+				if (this.container.children[i].style.display == 'none')
+					this.dispatch('tab-activate', { el: this.container.children[i] });
+
+				this.container.children[i].style.display = 'block';
+			}
+			else
+			{
+				if (this.container.children[i].style.display == 'block')
+					this.dispatch('tab-deactivate', { el: this.container.children[i] });
+
+				this.container.children[i].style.display = 'none';
+			}
+		}
+
+		let links = this.querySelectorAll("[data-name]");
+
+		for (let i = 0; i < links.length; i++)
+		{
+			if (links[i].dataset.name == exceptName)
+				links[i].classList.add('active');
+			else
+				links[i].classList.remove('active');
+		}
+	},
+
+	/**
+	**	Shows the tab with the specified name.
+	*/
+	_showTab: function (name)
+	{
+		return this._hideTabsExcept (name);
+	},
+
+	/**
+	**	Selects a tab given its name.
+	*/
+	selectTab: function (name)
+	{
+		this._showTab (name);
+	}
+});
+
+},{"../xui":29}],27:[function(require,module,exports){
 
 globalThis.xui = require('./main');
 
-},{"./main":25}],25:[function(require,module,exports){
+},{"./main":28}],28:[function(require,module,exports){
 
 require('./elems/xui-element.js');
 require('./elems/xui-dialog.js');
 require('./elems/xui-list.js');
 require('./elems/xui-context.js');
+require('./elems/xui-tabs.js');
 
 module.exports = require('./xui');
 
-},{"./elems/xui-context.js":20,"./elems/xui-dialog.js":21,"./elems/xui-element.js":22,"./elems/xui-list.js":23,"./xui":26}],26:[function(require,module,exports){
+},{"./elems/xui-context.js":22,"./elems/xui-dialog.js":23,"./elems/xui-element.js":24,"./elems/xui-list.js":25,"./elems/xui-tabs.js":26,"./xui":29}],29:[function(require,module,exports){
 const { Element } = require('@rsthn/rin-front');
 const { Template } = require('@rsthn/rin');
 
@@ -6167,24 +6681,13 @@ const xui = module.exports =
 
 		input.onchange = function ()
 		{
-			if (input._timer) clearTimeout(input._timer);
-
-			document.body.onfocus = null;
-			document.body.removeChild(input);
-
 			callback(input.files);
 		};
 
 		document.body.onfocus = function ()
 		{
 			document.body.onfocus = null;
-
-			input._timer = setTimeout(function()
-			{
-				document.body.removeChild(input);
-				callback(null);
-			},
-			0);
+			document.body.removeChild(input);
 		};
 
 		input.click();
@@ -6263,4 +6766,4 @@ const xui = module.exports =
 	}
 };
 
-},{"@rsthn/rin":13,"@rsthn/rin-front":3}]},{},[24]);
+},{"@rsthn/rin":13,"@rsthn/rin-front":5}]},{},[27]);
