@@ -5,18 +5,18 @@ Defines a dropdown menu that shows when the pointer is over the dropdown element
 ### Sample Code
 ```html
 <div class="xui-dropdown">
-	<b>My Menu</b>
-	<ul>
-		<li><b data-action="actionA"><i class="fas fa-plus"></i> Run Action A</b></li>
-		<li class="sub-menu">
-			<b><i class="fas fa-plus"></i> Sub Menu</b>
-			<ul>
-				<li><b data-action="actionB"><i class="fas fa-plus"></i> Action B</b></li>
-				<li><b data-action="actionC"><i class="fas fa-plus"></i> Action C</b></li>
-				<li><b data-action="actionD"><i class="fas fa-plus"></i> Action D</b></li>
-			</ul>
-		</li>
-	</ul>
+    <b>My Menu</b>
+    <ul>
+        <li><b data-action="actionA"><i class="fas fa-plus"></i> Run Action A</b></li>
+        <li class="sub-menu">
+            <b><i class="fas fa-plus"></i> Sub Menu</b>
+            <ul>
+                <li><b data-action="actionB"><i class="fas fa-plus"></i> Action B</b></li>
+                <li><b data-action="actionC"><i class="fas fa-plus"></i> Action C</b></li>
+                <li><b data-action="actionD"><i class="fas fa-plus"></i> Action D</b></li>
+            </ul>
+        </li>
+    </ul>
 </div>
 ```
 

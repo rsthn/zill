@@ -8,19 +8,19 @@ The tab-content container should have one or more div elements each with a `data
 
 ```html
 <xui-tabs data-container="div.tab-container" data-default="tab_b">
-	<a data-name="tab_a">Tab A</a>
-	<a data-name="tab_b">Tab B</a>
-	<a data-name="tab_c">Tab C</a>
+    <a data-name="tab_a">Tab A</a>
+    <a data-name="tab_b">Tab B</a>
+    <a data-name="tab_c">Tab C</a>
 </xui-tabs>
 
 <div class="tab-container">
-	<div data-name="tab_a">
-		Content for Tab A.
-	</div>
+    <div data-name="tab_a">
+        Content for Tab A.
+    </div>
 
-	<div data-name="tab_b">
-		Content for Tab B.
-	</div>
+    <div data-name="tab_b">
+        Content for Tab B.
+    </div>
 </div>
 ```
 

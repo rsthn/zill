@@ -8,18 +8,18 @@ All actions defined by `data-action` attributes are executed on the `root` of th
 
 ```html
 <xui-context data-target=".selector">
-	<ul>
-		<li><em>Title</em></li>
-		<li><b data-action="actionA">Run Action A</b></li>
-		<li class="sub-menu">
-			<b>Sub Menu</b>
-			<ul>
-				<li><b data-action="actionB">Action B</b></li>
-				<li><b data-action="actionC">Action C</b></li>
-				<li><b data-action="actionD">Action D</b></li>
-			</ul>
-		</li>
-	</ul>
+    <ul>
+        <li><em>Title</em></li>
+        <li><b data-action="actionA">Run Action A</b></li>
+        <li class="sub-menu">
+            <b>Sub Menu</b>
+            <ul>
+                <li><b data-action="actionB">Action B</b></li>
+                <li><b data-action="actionC">Action C</b></li>
+                <li><b data-action="actionD">Action D</b></li>
+            </ul>
+        </li>
+    </ul>
 </xui-context>
 ```
 

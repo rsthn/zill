@@ -6,19 +6,19 @@ Floating container, has a header bar and a content area where other elements can
 
 ```html
 <xui-dialog class="x-draggable">
-	<div class="header">
-		<b><i class="fa fa-cog"></i>Configuration</b>
+    <div class="header">
+        <b><i class="fa fa-cog"></i>Configuration</b>
 
-		<span>
-			<i data-action="restore" class="far fa-window-restore"></i>
-			<i data-action="maximize" class="far fa-window-maximize"></i>
-			<i data-action="hide" class="fas fa-times"></i>
-		</span>
-	</div>
+        <span>
+            <i data-action="restore" class="far fa-window-restore"></i>
+            <i data-action="maximize" class="far fa-window-maximize"></i>
+            <i data-action="hide" class="fas fa-times"></i>
+        </span>
+    </div>
 
-	<div class="content p-4 text-center" style="width: 320px;">
-		Hello World
-	</div>
+    <div class="content p-4 text-center" style="width: 320px;">
+        Hello World
+    </div>
 </xui-dialog>
 ```
 
