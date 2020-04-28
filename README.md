@@ -4,14 +4,12 @@ The XUI toolkit was born because we at RedStar Technologies (RSTHN) like very mu
 
 ## Installation
 
-Preferably install XUI globally since it has a command line interface (CLI) to manage and initialize your projects, note that XUI requires
-Rin as peer dependency, which needs to be installed as well.
+Preferably install XUI globally since it has a command line interface (CLI) to manage and initialize your projects.
 
 ```sh
-npm install @rsthn/rin
 npm install -g @rsthn/xui --no-optional
 ```
 
 ## Elements
 
-The [ELEMENTDS.md](./docs/ELEMENTS.md) file in the [docs](./docs/) folder contains all the currently available XUI elements and their respective documentation.
+The [ELEMENTS.md](./docs/ELEMENTS.md) file in the [docs](./docs/) folder contains all the currently available XUI elements and their respective documentation.
