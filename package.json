@@ -1,18 +1,18 @@
 {
   "name": "@rsthn/xui",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "UI Toolkit to build web based tools.",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo Ok",
-    "clean-css": "del /q dist\\*.css && del /q dist\\*.png",
-    "clean-js": "del /q dist\\*.js",
+	"test": "echo Ok",
+    "clean-css": "if not exist dist (mkdir dist) && del /q dist\\*.css && del /q dist\\*.png",
+    "clean-js": "if not exist dist (mkdir dist) && del /q dist\\*.js",
     "build-css": "npm run clean-css && parcel build less/index.less --public-url ./ --no-source-maps --no-cache",
     "build-js": "npm run clean-js && parcel build src/index.js --public-url ./ --no-source-maps --no-cache",
     "build": "npm run build-css && npm run build-js"
   },
   "files": [
-    "dist",
+    "dist",	
     "less",
     "src",
     "LICENSE"
