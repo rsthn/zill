@@ -2,21 +2,20 @@
   "name": "@rsthn/xui",
   "version": "2.0.0",
   "description": "UI Toolkit to build web based tools.",
-  "main": "src/main.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo Ok",
-    "build": "npm-run-all --parallel build-css build-js",
-    "watch": "npm-run-all --parallel watch-css watch-js",
-    "build-css": "lessc src/xui.less dist/xui.css",
-    "watch-css": "less-watch-compiler src/css dist ../xui.less",
-    "build-js": "browserify --preserve-symlinks src/main-public.js | uglifyjs > dist/xui.js",
-    "watch-js": "watchify --preserve-symlinks src/main-public.js -o dist/xui.js -v"
-  },
-  "bin": {
-    "xui": "./cli.js"
+    "clean-css": "del /q dist\\*.css && del /q dist\\*.png",
+    "clean-js": "del /q dist\\*.js",
+    "build-css": "npm run clean-css && parcel build less/index.less --public-url ./ --no-source-maps --no-cache",
+    "build-js": "npm run clean-js && parcel build src/index.js --public-url ./ --no-source-maps --no-cache",
+    "build": "npm run build-css && npm run build-js"
   },
   "files": [
-    "dist"
+    "dist",
+    "less",
+    "src",
+    "LICENSE"
   ],
   "repository": {
     "type": "git",
@@ -28,16 +27,10 @@
     "url": "https://github.com/rsthn/xui/issues"
   },
   "homepage": "https://github.com/rsthn/xui#readme",
-  "dependencies": {
-    "@rsthn/rin": "^2.0.9",
-    "@rsthn/rin-front": "^1.0.6"
-  },
-  "optionalDependencies": {
-    "browserify": "^16.5.0",
-    "less": "^3.10.3",
-    "less-watch-compiler": "^1.14.6",
-    "npm-run-all": "^4.1.5",
-    "watchify": "^3.11.1",
-    "uglify-es": "^3.3.9"
+  "devDependencies": {
+    "@rsthn/rin": "^2.0.10",
+    "@rsthn/rin-front": "^1.0.6",
+    "cssnano": "^4.1.10",
+    "less": "^3.11.1"
   }
 }

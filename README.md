@@ -1,6 +1,6 @@
 # XUI 2
 
-The XUI toolkit was born because we at RedStar Technologies (RSTHN) like very much to create web-based tools. And we often found the need to have a standard way to define common UI elements to speed up our development process.
+The XUI toolkit was born because we like very much to create web-based tools, and we often found the need to have a standard way to define common UI elements to speed up our development process.
 
 ## Installation
 

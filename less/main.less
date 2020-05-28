@@ -1,5 +1,3 @@
-@import (reference) "./css/constants.less";
-
 .repeat-px(@list, @prefix, @prop, @sel:~'', @i:0) when (@i < length(@list)) {
 	@value: extract(@list, @i+1);
 	.@{prefix}-@{i} @{sel} { @{prop}: @value*@px; }
@@ -26,31 +24,16 @@
 }
 
 /* ************************** */
-html {
-	font-size: @font-size; line-height: (@font-size + 2px);
-}
+@import "./ext/normalize.css";
+@import "./general.less";
 
-.xui-app {
-	position: absolute; left: 0; top: 0; width: 100vw; height: 100vh; margin: 0; padding: 0; overflow: hidden;
-	background-image: if(@background-image="", none, url(@background-image));
-	background-color: @base-color;
-	color: @text-base;
-}
+@import "./x-scrollable.less";
 
-* {
-	cursor: if(@cursor="", default, e(%("url(%a) 1 1, auto", @cursor)));
-}
-
-/* ************************** */
-@import "./css/general.less";
-
-@import "./css/x-scrollable.less";
-
-@import "./css/xui-dialog.less";
-@import "./css/xui-list.less";
-@import "./css/xui-dropdown.less";
-@import "./css/xui-context.less";
-@import "./css/xui-menubar.less";
-@import "./css/xui-panel.less";
-@import "./css/xui-image-list.less";
-@import "./css/xui-tabs.less";
+@import "./xui-dialog.less";
+@import "./xui-list.less";
+@import "./xui-dropdown.less";
+@import "./xui-context.less";
+@import "./xui-menubar.less";
+@import "./xui-panel.less";
+@import "./xui-image-list.less";
+@import "./xui-tabs.less";
