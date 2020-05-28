@@ -4,7 +4,8 @@
   "description": "UI Toolkit to build web based tools.",
   "main": "src/index.js",
   "scripts": {
-	"test": "echo Ok",
+    "test": "echo Ok",
+    "install-deps": "npm i -g --no-optional parcel-bundler cssnano less",
     "clean-css": "if not exist dist (mkdir dist) && del /q dist\\*.css && del /q dist\\*.png",
     "clean-js": "if not exist dist (mkdir dist) && del /q dist\\*.js",
     "build-css": "npm run clean-css && parcel build less/index.less --public-url ./ --no-source-maps --no-cache",
@@ -12,7 +13,7 @@
     "build": "npm run build-css && npm run build-js"
   },
   "files": [
-    "dist",	
+    "dist",
     "less",
     "src",
     "LICENSE"
@@ -27,6 +28,9 @@
     "url": "https://github.com/rsthn/xui/issues"
   },
   "homepage": "https://github.com/rsthn/xui#readme",
+  "browserslist": [
+    "since 2019-01"
+  ],
   "devDependencies": {
     "@rsthn/rin": "^2.0.10",
     "@rsthn/rin-front": "^1.0.6",
