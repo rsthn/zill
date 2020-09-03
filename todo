@@ -1,1 +1,2 @@
-Add 'events' description to tabs.md
+- Add 'events' description to tabs.md
+- Ensure all colors are handled by some main colors file.
