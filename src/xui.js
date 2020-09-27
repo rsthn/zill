@@ -369,11 +369,12 @@ const xui = module.exports =
 	/**
 	**	Forces the browser to show a file selection dialog.
 	*/
-	showFilePicker: function (allowMultiple, callback)
+	showFilePicker: function (allowMultiple, accept, callback)
 	{
 		var input = document.createElement("input");
 
 		input.type = "file";
+		input.accept = accept;
 		input.style.display = 'none';
 		input.multiple = allowMultiple;
 
