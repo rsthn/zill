@@ -1,6 +1,6 @@
 {
     "name": "@rsthn/xui",
-    "version": "2.0.4",
+    "version": "2.0.5",
     "description": "UI Toolkit to build web based tools.",
     "main": "src/index.js",
     "scripts": {
@@ -33,9 +33,9 @@
         "since 2019-01"
     ],
     "devDependencies": {
-        "@rsthn/rin": "^2.0.19",
-        "@rsthn/rin-front": "^1.0.13",
+        "@rsthn/rin": "^2.0.21",
+        "@rsthn/rin-front": "^1.0.14",
         "cssnano": "^4.1.10",
-        "less": "^3.12.2"
+        "less": "^3.13.1"
     }
 }
