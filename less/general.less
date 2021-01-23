@@ -94,8 +94,8 @@ html {
 .flex-row.ch-flex-even > * { flex: 1 1 0; }
 .flex-col.ch-flex-even > * { flex: 1 1 0; }
 
-.flex-row > .flex-fill { width: 0; }
-.flex-col > .flex-fill { height: 0; }
+.flex-row > .flex-fill { min-width: 0; width: auto; }
+.flex-col > .flex-fill { min-height: 0; height: auto; }
 
 .align-items-start { align-items: flex-start; }
 .align-items-end { align-items: flex-end; }

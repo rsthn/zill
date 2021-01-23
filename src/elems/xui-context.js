@@ -26,9 +26,14 @@ xui.register ('xui-context',
 
 	events: {
 		"click [data-action]": function(evt) {
-			let action = evt.source.dataset.action;
+			let opts = evt.source.dataset.action.split(' ');
+
 			evt.source = this._source;
-			this.root[action] (evt);
+
+			if (opts[0] in this.root)
+				this.root[opts[0]] ({...evt.source.dataset, ...opts}, evt);
+			else
+				evt.continuePropagation = true;
 		}
 	},
 
