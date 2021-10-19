@@ -1,26 +1,59 @@
-const { Element } = require('@rsthn/rin-front');
-const { Template } = require('@rsthn/rin');
 
-const xui = module.exports =
+import { Element } from 'riza';
+import { Template } from '@rsthn/rin';
+
+//!class xui
+
+const xui =
 {
+	/**
+	 * Registered elements with the `register` method.
+	 * !static elements: Array<object>;
+	 */
 	elements: [ ],
 
+	/**
+	 * Compiles a violet template and returns the evaluator function.
+	 * @param {string} str - Template to compile.
+	 * @returns {(data) => string}
+	 * !static template(str);
+	 */
 	template: function (str)
 	{
 		return Template.compile(str);
 	},
 
+	/**
+	 * Registers a new custom element with the specified name and prototypes.
+	 * @param {string} name - Name of the element. Must be unique.
+	 * @param  {...any} protos - Prototypes or super class names to add to the element.
+	 * !static register (name, ...protos);
+	 */
 	register: function (name, ...protos)
 	{
 		this.elements.push(name);
 		Element.register(name, ...protos);
 	},
 
+	/**
+	 * Aligns the specified value such that it is a factor of the given step.
+	 * @param {numbe} value - Value to align.
+	 * @param {number} step - Step to align the value to.
+	 * @returns {number}
+	 * !static alignValue (value, step);
+	 */
 	alignValue: function (value, step)
 	{
 		return Math.round(value/step)*step;
 	},
 
+	/**
+	 * Returns `true` if the rectangles overlap.
+	 * @param {DOMRect} rect1 - First rectangle.
+	 * @param {DOMRect} rect2 - Second rectangle.
+	 * @returns {boolean}
+	 * !static overlapTes (rect1, rect2);
+	 */
 	overlapTest: function (rect1, rect2)
 	{
 		var _x1 = Math.max(rect1.left, rect2.left);
@@ -31,14 +64,36 @@ const xui = module.exports =
 		return Math.max(0, _y2-_y1) * Math.max(0, _x2-_x1) > 0;	
 	},
 
+	/**
+	 * Utility methods related to element position.
+	 * !static position = {
+	 */
 	position:
 	{
+		/**
+		 * Reads the position (and size) of the given element.
+		 * @param {Element} elem - Source element.
+		 * @returns { {x:number, y:number, width:number, height:number} }	
+		 */
 		get: function (elem)
 		{
 			let p = elem.getBoundingClientRect();
 			return { x: p.left, y: p.top, width: p.width, height: p.height };
 		},
 
+		/**
+		 * Sets the position of the specified element.
+		 * @param {Element} elem - Target element.
+		 * @param {number} x - X position.
+		 * @param {number} y - Y position.
+		 * @returns {void}
+		 */
+		/**
+		 * Sets the position of the specified element.
+		 * @param {Element} elem - Target element.
+		 * @param { {x:number, y:number} } pos - Position of the element.
+		 * @returns {void}
+		 */
 		set: function (elem, ...args)
 		{
 			if (args.length == 1)
@@ -52,14 +107,37 @@ const xui = module.exports =
 			elem.style.top = args[1] + 'px';
 		}
 	},
+	//!}
 
+	/**
+	 * Utility methods to add drag support to elements.
+	 * !static draggable = {
+	 */
 	draggable:
 	{
+		/**
+		 * Indicates if the draggable module has been initialized.
+		 */
 		initialized: false,
 
+		/**
+		 * Internal state.
+		 */
 		state: { enabled: false, sx: 0, sy: 0, pos: null, target: null },
+
+		/**
+		 * Draggable elements grouped by their group name.
+		 */
 		group: { },
 
+		/**
+		 * Attaches draggable support to the specified element.
+		 * @param {Element} handle - Drag handle element.
+		 * @param {Element} target - Target draggable element (container).
+		 * @param {string} group? - Name of the draggable group.
+		 * @returns {void}
+		 * !static attach (handle, target, group);
+		 */
 		attach: function (handle, target, group)
 		{
 			if (!handle || !target)
@@ -103,6 +181,9 @@ const xui = module.exports =
 			};
 		},
 
+		/**
+		 * Global mouse move event handler.
+		 */
 		_mousemove: function (evt)
 		{
 			if (!this.state.enabled)
@@ -120,6 +201,9 @@ const xui = module.exports =
 				this.state.target.onDraggableMoved(this.state.pos.x + dx, this.state.pos.y + dy);
 		},
 
+		/**
+		 * Global mouse up event handler.
+		 */
 		_mouseup: function (evt)
 		{
 			if (this.state.enabled)
@@ -130,9 +214,20 @@ const xui = module.exports =
 			}
 		}
 	},
+	//!}
 
+	/**
+	 * Utility methods to add scroll support to elements.
+	 * !static scrollable = {
+	 */
 	scrollable:
 	{
+		/**
+		 * Attaches scroll support to the specified element.
+		 * @param {Element} target - Element to attach the scroll support.
+		 * @returns void
+		 * !static attach (target);
+		 */
 		attach: function (target)
 		{
 			let mutex = false;
@@ -187,14 +282,25 @@ const xui = module.exports =
 			};
 		}
 	},
+	//!}
 
+	/**
+	 * Utility methods to add text editing support to elements.
+	 * !static editable = {
+	 */
 	editable:
 	{
-		/*
-		**	Attaches an editable to the specified target. The callback(new_value, old_value) is called when an event on the input happens (blur, ENTER-key, ESC-key),
-		**	and if the callback returns false editing will continue (and the input will be re-focused), if the callback returns true nothing will be done, and if
-		**	any other value is returned, it will be used as the new text content of the target. A new_value of null is sent to the callback when ESC or onblur happens.
-		*/
+		/**
+		 * Attaches an editable to the specified target. The callback(new_value, old_value) is called when an event on the input happens (blur, ENTER-key, ESC-key),
+		 * and if the callback returns false editing will continue (and the input will be re-focused), if the callback returns true nothing will be done, and if
+		 * any other value is returned, it will be used as the new text content of the target. A new_value of null is sent to the callback when ESC or onblur happens.
+		 * 
+		 * @param {Element} target - Element to add the edition support.
+		 * @param {string} prev_value - Previous value prior to edition.
+		 * @param {(curValue:string, prevValue:string) => boolean)} callback - Callback to validate the values.
+		 * @returns {void}
+		 * !static attach (target, prev_value, callback);
+		 */
 		attach: function (target, prev_value, callback)
 		{
 			if (target.querySelector('.inline-input') != null)
@@ -251,7 +357,12 @@ const xui = module.exports =
 			input.focus();
 		}
 	},
+	//!}
 
+	/**
+	 * Utility methods to add selection support to elements.
+	 * !static selectable = {
+	 */
 	selectable:
 	{
 		initialized: false,
@@ -262,6 +373,12 @@ const xui = module.exports =
 
 		div: null,
 
+		/**
+		 * Adds selection support to the specified element. Event `onSelectionChanged` will be triggered on the element whenever the selection changes.
+		 * Attribute `selection` of the element will have the list of items selected.
+		 * @param {Element} target - Element to add the selection support.
+		 * !static attach (target);
+		 */
 		attach: function (target)
 		{
 			if (!this.initialized)
@@ -348,10 +465,15 @@ const xui = module.exports =
 			});
 		}
 	},
+	//!}
 
 	/**
-	**	Forces the browser to show a download dialog.
-	*/
+	 * Forces the browser to show a download dialog.
+	 * @param {string} filename - Filename to show in the download dialog.
+	 * @param {string} dataUrl - Data URI to download.
+	 * 
+	 * !static showDownload (filename, dataUrl);
+	 */
 	showDownload: function (filename, dataUrl)
 	{
 		var link = document.createElement("a");
@@ -367,8 +489,13 @@ const xui = module.exports =
 	},
 
 	/**
-	**	Forces the browser to show a file selection dialog.
-	*/
+	 * Forces the browser to show a file selection dialog.
+	 * @param {boolean} allowMultiple - Set to `true` to allow multiple selections.
+	 * @param {string} accept - Accepted MIME types.
+	 * @param {(Array<File>) => void} callback - Callback used to handle the selected files.
+	 * 
+	 * !static showFilePicker (allowMultiple, accept, callback);
+	 */
 	showFilePicker: function (allowMultiple, accept, callback)
 	{
 		var input = document.createElement("input");
@@ -395,8 +522,12 @@ const xui = module.exports =
 	},
 
 	/**
-	**	Loads a URL using FileReader and returns as a dataURL.
-	*/
+	 * Loads a file using FileReader and returns the result as a dataURL.
+	 * @param {File} file - File to load.
+	 * @param {(dataUrl:string) => void} callback
+	 * 
+	 * !loadAsDataURL (file, callback);
+	 */
 	loadAsDataURL: function (file, callback)
 	{
 		var reader = new FileReader();
@@ -409,8 +540,12 @@ const xui = module.exports =
 	},
 
 	/**
-	**	Loads a URL using FileReader and returns as text.
-	*/
+	 * Loads a file using FileReader and returns the result as text.
+	 * @param {File} file - File to load.
+	 * @param {(text:string) => void)} callback
+	 * 
+	 * static loadAsText (file, callback);
+	 */
 	loadAsText: function (file, callback)
 	{
 		var reader = new FileReader();
@@ -423,8 +558,12 @@ const xui = module.exports =
 	},
 
 	/**
-	**	Loads a URL using FileReader and returns as an array buffer.
-	*/
+	 * Loads a file using FileReader and returns the result as an array buffer.
+	 * @param {File} file - File to load.
+	 * @param {(value:ArrayBuffer) => void} callback 
+	 * 
+	 * !static loadAsArrayBuffer (file, callback);
+	 */
 	loadAsArrayBuffer: function (file, callback)
 	{
 		var reader = new FileReader();
@@ -437,8 +576,13 @@ const xui = module.exports =
 	},
 
 	/**
-	**	Loads an array of URLs using FileReader and returns them as data url.
-	*/
+	 * Loads an array of File objects using FileReader and returns them as data URLs.
+	 * @param {Array<File>} fileList - Files to load.
+	 * @param {Array<string>} callback 
+	 * @returns {void}
+	 * 
+	 * !static loadAllAsDataURL (fileList, callback);
+	 */
 	loadAllAsDataURL: function (fileList, callback)
 	{
 		var result = [];
@@ -466,3 +610,5 @@ const xui = module.exports =
 		loadNext(0);
 	}
 };
+
+export default xui;

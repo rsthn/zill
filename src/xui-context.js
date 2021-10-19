@@ -1,7 +1,7 @@
 /*
-**	xui/elems/xui-context
+**	xui/xui-context
 **
-**	Copyright (c) 2019-2020, RedStar Technologies, All rights reserved.
+**	Copyright (c) 2019-2021, RedStar Technologies, All rights reserved.
 **	https://www.rsthn.com/
 **
 **	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -14,28 +14,27 @@
 **	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-const xui = require('../xui');
+import xui from './xui';
 
-/*
-**	Context menu.
-*/
+/**
+ * Context menu.
+ */
 
 xui.register ('xui-context',
 {
 	isRoot: true,
 
-	events: {
-		"click [data-action]": function(evt) {
-			let opts = evt.source.dataset.action.split(' ');
+	/*'event click [data-action]': function(evt)
+	{
+		let opts = evt.source.dataset.action.split(' ');
 
-			evt.source = this._source;
+		evt.source = this._source;
 
-			if (opts[0] in this.root)
-				this.root[opts[0]] ({...evt.source.dataset, ...opts}, evt);
-			else
-				evt.continuePropagation = true;
-		}
-	},
+		if (opts[0] in this.root)
+			this.root[opts[0]] ({...evt.source.dataset, ...opts}, evt);
+		else
+			evt.continuePropagation = true;
+	},*/
 
 	init: function()
 	{

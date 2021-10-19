@@ -1,7 +1,7 @@
 /*
-**	xui/elems/xui-tabs
+**	xui/xui-tabs
 **
-**	Copyright (c) 2019-2020, RedStar Technologies, All rights reserved.
+**	Copyright (c) 2019-2021, RedStar Technologies, All rights reserved.
 **	https://www.rsthn.com/
 **
 **	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -14,19 +14,16 @@
 **	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-const xui = require('../xui');
+import xui from './xui';
 
-/*
-**	Tabs.
-*/
+/**
+ * Content tabs.
+ */
 
 xui.register ('xui-tabs',
 {
-	events:
-	{
-		'click [data-name]': function (evt) {
-			this.selectTab (evt.source.dataset.name);
-		}
+	'event click [data-name]': function (evt) {
+		this.selectTab (evt.source.dataset.name);
 	},
 
 	init: function()
@@ -34,9 +31,6 @@ xui.register ('xui-tabs',
 		this.classList.add('xui-tabs');
 	},
 
-	/**
-	**	Executed when the children of the element are ready.
-	*/
 	ready: function()
 	{
 		if ('container' in this.dataset)

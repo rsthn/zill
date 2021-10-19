@@ -38,9 +38,9 @@ function run (command)
 };
 
 
-run('svn-msg "Published: v'+package.version+'"')
+run('svn-commit')
 .then(r => run('git add .'))
-.then(r => run('git commit -F .svn\\messages.log'))
+.then(r => run('git commit -F .svn\\messages.log.old'))
 .then(r => run('git push'))
 .then(r => run('git tag v' + package.version))
 .then(r => run('git push origin refs/tags/v'+package.version))

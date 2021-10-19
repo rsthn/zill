@@ -3,15 +3,33 @@
     "version": "2.0.6",
     "description": "UI Toolkit to build web based tools.",
     "main": "src/index.js",
+    "type": "module",
+	"types": "./dist/xui.d.ts",
     "scripts": {
         "test": "echo Ok",
-        "install-deps": "npm i -g --no-optional parcel-bundler cssnano less",
-        "clean-css": "if not exist dist (mkdir dist) && del /q dist\\*.css && del /q dist\\*.png",
-        "clean-js": "if not exist dist (mkdir dist) && del /q dist\\*.js",
-        "build-css": "npm run clean-css && parcel build less/index.less --public-url ./ --no-source-maps --no-cache",
-        "build-js": "npm run clean-js && parcel build src/index.js --public-url ./ --no-source-maps --no-cache",
-        "build": "npm run build-css && npm run build-js",
-        "deploy": "node ./scripts/deploy.js"
+        "requirements": "yarn global add shx parcel less",
+        "clean-css": "shx mkdir -p dist && shx rm -f dist/*.css && shx rm -f dist/*.png",
+        "clean-js": "shx mkdir -p dist && shx rm -f dist/*.js",
+        "build-css": "yarn clean-css && parcel build less/index.less --target css --public-url ./ --no-source-maps --no-cache",
+        "build-js": "yarn clean-js && parcel build src/index.js --target browser --public-url ./ --no-source-maps --no-cache",
+        "build": "yarn tsdoc && yarn build-css && yarn build-js",
+		"tsdoc": "node ./scripts/tsdoc.js ./src/index.js ./dist/xui.d.ts",
+        "deploy": "node ./scripts/deploy.js",
+        "commit": "node ./scripts/commit.js"
+    },
+    "css": "dist/index.css",
+    "browser": "dist/index.js",
+    "targets": {
+        "css": {
+            "engines": {
+                "browsers": "since 2019-01"
+            }
+        },
+        "js": {
+            "engines": {
+                "browsers": "since 2019-01"
+            }
+        }
     },
     "files": [
         "dist",
@@ -29,13 +47,13 @@
         "url": "https://github.com/rsthn/xui/issues"
     },
     "homepage": "https://github.com/rsthn/xui#readme",
-    "browserslist": [
-        "since 2019-01"
-    ],
     "devDependencies": {
-        "@rsthn/rin": "^2.0.21",
-        "@rsthn/rin-front": "^1.0.14",
-        "cssnano": "^4.1.10",
+        "@parcel/transformer-image": "2.0.0-rc.0",
+        "@parcel/transformer-less": "2.0.0-rc.0",
         "less": "^3.13.1"
+    },
+    "dependencies": {
+		"@rsthn/rin": "^2.0.33",
+		"riza": "^1.0.45"
     }
 }

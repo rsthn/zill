@@ -1,7 +1,7 @@
 /*
-**	xui/elems/xui-list
+**	xui/xui-list
 **
-**	Copyright (c) 2019-2020, RedStar Technologies, All rights reserved.
+**	Copyright (c) 2019-2021, RedStar Technologies, All rights reserved.
 **	https://www.rsthn.com/
 **
 **	THIS LIBRARY IS PROVIDED BY REDSTAR TECHNOLOGIES "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -14,18 +14,17 @@
 **	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-const xui = require('../xui');
+import xui from './xui';
 
-/*
-**	Options List
-*/
+/**
+ * Options List
+ */
 
 xui.register ('xui-list', 'xui-element',
 {
-	events: {
-		"click span[data-value]": function(evt) {
-			this.setValue (evt.source.dataset.value);
-		}
+	'event click span[data-value]': function(evt)
+	{
+		this.setValue (evt.source.dataset.value);
 	},
 
 	ready: function()

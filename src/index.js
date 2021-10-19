@@ -1,8 +1,10 @@
 
-require('./elems/xui-element.js');
-require('./elems/xui-dialog.js');
-require('./elems/xui-list.js');
-require('./elems/xui-context.js');
-require('./elems/xui-tabs.js');
+import './xui-element.js';
+import './xui-dialog.js';
+import './xui-list.js';
+import './xui-context.js';
+import './xui-tabs.js';
 
-module.exports = require('./xui');
+//![import './xui']
+import xui from './xui';
+export default xui;
