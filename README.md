@@ -4,10 +4,8 @@ The XUI toolkit was born because we like very much to create web-based tools, an
 
 ## Installation
 
-Preferably install XUI globally since it has a command line interface (CLI) to manage and initialize your projects.
-
 ```sh
-npm install -g @rsthn/xui --no-optional
+yarn add @rsthn/xui
 ```
 
 ## Elements
