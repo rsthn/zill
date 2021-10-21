@@ -22,8 +22,6 @@ import xui from './xui';
 
 xui.register ('xui-element',
 {
-	isRoot: true,
-
 	init: function() {
 	}
 });

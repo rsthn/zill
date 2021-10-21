@@ -38,8 +38,8 @@ xui.register ('xui-list', 'xui-element',
 			this.baseHeight = this.getHeight();
 		}
 
-		if (this.classList.contains('x-scrollable'))
-			xui.scrollable.attach(this);
+		//if (this.classList.contains('x-scrollable'))
+		//	xui.scrollable.attach(this);
 	},
 
 	onConnected: function()

@@ -1,6 +1,6 @@
 {
     "name": "@rsthn/xui",
-    "version": "2.0.7",
+    "version": "2.0.8",
     "description": "UI Toolkit to build web based tools.",
     "main": "src/index.js",
     "type": "module",
@@ -33,8 +33,6 @@
     },
     "files": [
         "dist",
-        "less",
-        "src",
         "LICENSE"
     ],
     "repository": {

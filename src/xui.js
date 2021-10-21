@@ -244,7 +244,7 @@ const xui =
 
 			target.appendChild(bar);
 
-			let update = function()
+			const update = function()
 			{
 				let height = target.getBoundingClientRect().height;
 				innerMostBar.style.height = (100*height / target.scrollHeight).toFixed(2) + "%";
@@ -306,7 +306,7 @@ const xui =
 			if (target.querySelector('.inline-input') != null)
 				return;
 
-			if (prev_value == null)
+			if (prev_value === null)
 				prev_value = target.innerText.trim();
 
 			let input = document.createElement('input');

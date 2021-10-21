@@ -26,13 +26,10 @@ xui.register ('xui-tabs',
 		this.selectTab (evt.source.dataset.name);
 	},
 
-	init: function()
-	{
-		this.classList.add('xui-tabs');
-	},
-
 	ready: function()
 	{
+		this.classList.add('xui-tabs');
+
 		if ('container' in this.dataset)
 			this.container = document.querySelector(this.dataset.container);
 		else

@@ -22,7 +22,7 @@ import xui from './xui';
 
 xui.register ('xui-dialog', 'xui-element',
 {
-	init: function()
+	ready: function()
 	{
 		this.classList.add('xui-dialog');
 
@@ -30,7 +30,7 @@ xui.register ('xui-dialog', 'xui-element',
 			xui.draggable.attach(this.querySelector('.header'), this, 'xui-dialog');
 	},
 
-	show: function(imm)
+	show: function(imm=false)
 	{
 		if (this.classList.contains('visible'))
 			return false;
@@ -44,7 +44,7 @@ xui.register ('xui-dialog', 'xui-element',
 		return true;
 	},
 
-	hide: function(imm)
+	hide: function(imm=false)
 	{
 		if (this.classList.contains('hidden'))
 			return false;
