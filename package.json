@@ -1,6 +1,6 @@
 {
     "name": "@rsthn/xui",
-    "version": "2.0.8",
+    "version": "2.0.9",
     "description": "UI Toolkit to build web based tools.",
     "main": "src/index.js",
     "type": "module",
@@ -46,8 +46,7 @@
     },
     "homepage": "https://github.com/rsthn/xui#readme",
     "devDependencies": {
-        "@parcel/transformer-image": "2.0.0-rc.0",
-        "@parcel/transformer-less": "2.0.0-rc.0",
+        "@parcel/transformer-less": "^2.0.0",
         "less": "^3.13.1"
     },
     "dependencies": {
