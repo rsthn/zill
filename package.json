@@ -1,6 +1,6 @@
 {
     "name": "@rsthn/xui",
-    "version": "2.0.10",
+    "version": "2.0.11",
     "description": "UI Toolkit to build web based tools.",
     "main": "src/index.js",
     "type": "module",
@@ -14,7 +14,7 @@
         "build-js": "yarn clean-js && parcel build src/index.js --target browser --public-url ./ --no-source-maps --no-cache",
         "build": "yarn tsdoc && yarn build-css && yarn build-js",
         "tsdoc": "node ./scripts/tsdoc.js ./src/index.js ./dist/xui.d.ts",
-        "deploy": "node ./scripts/deploy.js",
+        "deploy": "yarn build && node ./scripts/deploy.js",
         "commit": "node ./scripts/commit.js"
     },
     "css": "dist/index.css",
