@@ -544,7 +544,7 @@ const xui =
 	 * @param {File} file - File to load.
 	 * @param {(text:string) => void)} callback
 	 * 
-	 * static loadAsText (file, callback);
+	 * !static loadAsText (file, callback);
 	 */
 	loadAsText: function (file, callback)
 	{

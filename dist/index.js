@@ -1,10 +1,10 @@
-import {Element as $3Phvp$Element} from "riza";
-import {Template as $3Phvp$Template} from "@rsthn/rin";
+import {Element as $gIDO3$Element} from "riza";
+import {Template as $gIDO3$Template} from "@rsthn/rin";
 
 
 
 //!class xui
-const $af9ef4ea133e2aee$var$xui = {
+const $bbe804bf055072a7$var$xui = {
     /**
 	 * Registered elements with the `register` method.
 	 * !static elements: Array<object>;
@@ -15,7 +15,7 @@ const $af9ef4ea133e2aee$var$xui = {
 	 * @returns {(data) => string}
 	 * !static template(str);
 	 */ template: function(str) {
-        return $3Phvp$Template.compile(str);
+        return $gIDO3$Template.compile(str);
     },
     /**
 	 * Registers a new custom element with the specified name and prototypes.
@@ -24,7 +24,7 @@ const $af9ef4ea133e2aee$var$xui = {
 	 * !static register (name, ...protos);
 	 */ register: function(name, ...protos) {
         this.elements.push(name);
-        $3Phvp$Element.register(name, ...protos);
+        $gIDO3$Element.register(name, ...protos);
     },
     /**
 	 * Aligns the specified value such that it is a factor of the given step.
@@ -136,7 +136,7 @@ const $af9ef4ea133e2aee$var$xui = {
                 this.state.sx = evt.clientX;
                 this.state.sy = evt.clientY;
                 this.state.target = target;
-                this.state.pos = $af9ef4ea133e2aee$var$xui.position.get(target);
+                this.state.pos = $bbe804bf055072a7$var$xui.position.get(target);
                 this.state.enabled = true;
                 target.front();
             };
@@ -149,7 +149,7 @@ const $af9ef4ea133e2aee$var$xui = {
             evt.stopPropagation();
             let dx = evt.clientX - this.state.sx;
             let dy = evt.clientY - this.state.sy;
-            $af9ef4ea133e2aee$var$xui.position.set(this.state.target, this.state.pos.x + dx, this.state.pos.y + dy);
+            $bbe804bf055072a7$var$xui.position.set(this.state.target, this.state.pos.x + dx, this.state.pos.y + dy);
             if ('onDraggableMoved' in this.state.target) this.state.target.onDraggableMoved(this.state.pos.x + dx, this.state.pos.y + dy);
         },
         /**
@@ -311,7 +311,7 @@ const $af9ef4ea133e2aee$var$xui = {
                     this.state = 0;
                     let list = [];
                     for (let i of this.target.selection)i.classList.remove('selected');
-                    for (let i1 of this.target.children)if ($af9ef4ea133e2aee$var$xui.overlapTest(this.rect, i1.getBoundingClientRect())) {
+                    for (let i1 of this.target.children)if ($bbe804bf055072a7$var$xui.overlapTest(this.rect, i1.getBoundingClientRect())) {
                         i1.classList.add('selected');
                         list.push(i1);
                     }
@@ -395,7 +395,7 @@ const $af9ef4ea133e2aee$var$xui = {
 	 * @param {File} file - File to load.
 	 * @param {(text:string) => void)} callback
 	 * 
-	 * static loadAsText (file, callback);
+	 * !static loadAsText (file, callback);
 	 */ loadAsText: function(file, callback) {
         var reader = new FileReader();
         reader.onload = function(e) {
@@ -434,7 +434,7 @@ const $af9ef4ea133e2aee$var$xui = {
                 callback(result);
                 return;
             }
-            $af9ef4ea133e2aee$var$xui.loadAsDataURL(fileList[i], function(url) {
+            $bbe804bf055072a7$var$xui.loadAsDataURL(fileList[i], function(url) {
                 result.push({
                     name: fileList[i].name,
                     size: fileList[i].size,
@@ -446,12 +446,12 @@ const $af9ef4ea133e2aee$var$xui = {
         loadNext(0);
     }
 };
-var $af9ef4ea133e2aee$export$2e2bcd8739ae039 = $af9ef4ea133e2aee$var$xui;
+var $bbe804bf055072a7$export$2e2bcd8739ae039 = $bbe804bf055072a7$var$xui;
 
 
 /**
  * Base element.
- */ $af9ef4ea133e2aee$export$2e2bcd8739ae039.register('xui-element', {
+ */ $bbe804bf055072a7$export$2e2bcd8739ae039.register('xui-element', {
     init: function() {
     }
 });
@@ -460,10 +460,10 @@ var $af9ef4ea133e2aee$export$2e2bcd8739ae039 = $af9ef4ea133e2aee$var$xui;
 
 /**
  * Floating dialog.
- */ $af9ef4ea133e2aee$export$2e2bcd8739ae039.register('xui-dialog', 'xui-element', {
+ */ $bbe804bf055072a7$export$2e2bcd8739ae039.register('xui-dialog', 'xui-element', {
     ready: function() {
         this.classList.add('xui-dialog');
-        if (this.classList.contains('x-draggable')) $af9ef4ea133e2aee$export$2e2bcd8739ae039.draggable.attach(this.querySelector('.header'), this, 'xui-dialog');
+        if (this.classList.contains('x-draggable')) $bbe804bf055072a7$export$2e2bcd8739ae039.draggable.attach(this.querySelector('.header'), this, 'xui-dialog');
     },
     show: function(imm = false) {
         if (this.classList.contains('visible')) return false;
@@ -492,7 +492,7 @@ var $af9ef4ea133e2aee$export$2e2bcd8739ae039 = $af9ef4ea133e2aee$var$xui;
 
 /**
  * Options List
- */ $af9ef4ea133e2aee$export$2e2bcd8739ae039.register('xui-list', 'xui-element', {
+ */ $bbe804bf055072a7$export$2e2bcd8739ae039.register('xui-list', 'xui-element', {
     'event click span[data-value]': function(evt) {
         this.setValue(evt.source.dataset.value);
     },
@@ -544,7 +544,7 @@ var $af9ef4ea133e2aee$export$2e2bcd8739ae039 = $af9ef4ea133e2aee$var$xui;
 
 /**
  * Context menu.
- */ $af9ef4ea133e2aee$export$2e2bcd8739ae039.register('xui-context', {
+ */ $bbe804bf055072a7$export$2e2bcd8739ae039.register('xui-context', {
     isRoot: true,
     'event click [data-action]': function(evt) {
         evt.params = {
@@ -568,8 +568,8 @@ var $af9ef4ea133e2aee$export$2e2bcd8739ae039 = $af9ef4ea133e2aee$var$xui;
                 window.removeEventListener('mouseup', hdl, true);
             };
             window.addEventListener('mouseup', hdl, true);
-            let parent = $af9ef4ea133e2aee$export$2e2bcd8739ae039.position.get(this.root);
-            $af9ef4ea133e2aee$export$2e2bcd8739ae039.position.set(this, evt.clientX - parent.x, evt.clientY - parent.y);
+            let parent = $bbe804bf055072a7$export$2e2bcd8739ae039.position.get(this.root);
+            $bbe804bf055072a7$export$2e2bcd8739ae039.position.set(this, evt.clientX - parent.x, evt.clientY - parent.y);
         });
     },
     onDisconnected: function() {
@@ -591,7 +591,7 @@ var $af9ef4ea133e2aee$export$2e2bcd8739ae039 = $af9ef4ea133e2aee$var$xui;
 
 /**
  * Content tabs.
- */ $af9ef4ea133e2aee$export$2e2bcd8739ae039.register('xui-tabs', {
+ */ $bbe804bf055072a7$export$2e2bcd8739ae039.register('xui-tabs', {
     'event click [data-name]': function(evt) {
         this.selectTab(evt.source.dataset.name);
     },
@@ -637,7 +637,7 @@ var $af9ef4ea133e2aee$export$2e2bcd8739ae039 = $af9ef4ea133e2aee$var$xui;
 
 
 
-var $4cb1fe542e799eba$export$2e2bcd8739ae039 = $af9ef4ea133e2aee$export$2e2bcd8739ae039;
+var $82cbb5a2f3a1bcd0$export$2e2bcd8739ae039 = $bbe804bf055072a7$export$2e2bcd8739ae039;
 
 
-export {$4cb1fe542e799eba$export$2e2bcd8739ae039 as default};
+export {$82cbb5a2f3a1bcd0$export$2e2bcd8739ae039 as default};

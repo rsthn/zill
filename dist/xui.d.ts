@@ -123,6 +123,13 @@ export class xui
 	loadAsDataURL (file, callback);
 
 	/**
+	 * Loads a file using FileReader and returns the result as text.
+	 * @param {File} file - File to load.
+	 * @param {(text:string) => void)} callback
+	 */
+	static loadAsText (file, callback);
+
+	/**
 	 * Loads a file using FileReader and returns the result as an array buffer.
 	 * @param {File} file - File to load.
 	 * @param {(value:ArrayBuffer) => void} callback
