@@ -4,7 +4,7 @@ Defines a dropdown menu that shows when the pointer is over the dropdown element
 
 ### Sample Code
 ```html
-<div class="xui-dropdown">
+<div class="zl-dropdown">
     <b>My Menu</b>
     <ul>
         <li><b data-action="actionA"><i class="fas fa-plus"></i> Run Action A</b></li>
@@ -21,7 +21,7 @@ Defines a dropdown menu that shows when the pointer is over the dropdown element
 ```
 
 ### Preview
-![xui-dropdown](./img/xui-dropdown.png)
+![zl-dropdown](./img/zl-dropdown.png)
 
 &nbsp;<br/>
 ## Class Modifiers
@@ -35,7 +35,7 @@ Defines a dropdown menu that shows when the pointer is over the dropdown element
 ## Other Previews
 
 #### .x-compact
-![xui-dropdown](./img/xui-dropdown-x-compact.png)
+![zl-dropdown](./img/zl-dropdown-x-compact.png)
 
 #### .x-no-icons .x-compact
-![xui-dropdown](./img/xui-dropdown-x-no-icons.png)
+![zl-dropdown](./img/zl-dropdown-x-no-icons.png)

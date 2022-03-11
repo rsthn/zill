@@ -2,16 +2,16 @@
 
 A container with multiple panels, each of which can have one or more elements. A second element for the tab-content is required, this container is referenced by using the `data-container` attribute.
 
-The tab-content container should have one or more div elements each with a `data-name` attribute matching the same name defined in the buttons of the xui-tabs element.
+The tab-content container should have one or more div elements each with a `data-name` attribute matching the same name defined in the buttons of the zl-tabs element.
 
 ### Sample Code
 
 ```html
-<xui-tabs data-container="div.tab-container" data-default="tab_b">
+<zl-tabs data-container="div.tab-container" data-default="tab_b">
     <a data-name="tab_a">Tab A</a>
     <a data-name="tab_b">Tab B</a>
     <a data-name="tab_c">Tab C</a>
-</xui-tabs>
+</zl-tabs>
 
 <div class="tab-container">
     <div data-name="tab_a">
@@ -25,7 +25,7 @@ The tab-content container should have one or more div elements each with a `data
 ```
 
 ### Preview
-![xui-tabs](./img/xui-tabs.png)
+![zl-tabs](./img/zl-tabs.png)
 
 
 &nbsp;<br/>

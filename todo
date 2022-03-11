@@ -1,5 +1,4 @@
 - Add 'events' description to tabs.md
 - Ensure all colors are handled by some main colors file.
 
-
-Make xui-list default to "no root" since it is mostly used as a host instead of a master component.
+Make zl-list default to "no root" since it is mostly used as a host instead of a master component.

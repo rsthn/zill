@@ -7,7 +7,7 @@ All actions defined by `data-action` attributes are executed on the `root` of th
 ### Sample Code
 
 ```html
-<xui-context data-target=".selector">
+<zl-context data-target=".selector">
     <ul>
         <li><em>Title</em></li>
         <li><b data-action="actionA">Run Action A</b></li>
@@ -20,11 +20,11 @@ All actions defined by `data-action` attributes are executed on the `root` of th
             </ul>
         </li>
     </ul>
-</xui-context>
+</zl-context>
 ```
 
 ### Preview
-![xui-context](./img/xui-context.png)
+![zl-context](./img/zl-context.png)
 
 
 &nbsp;<br/>
@@ -38,4 +38,4 @@ All actions defined by `data-action` attributes are executed on the `root` of th
 &nbsp;<br/>
 ## Inherited CSS Classes
 
-- [`.xui-dropdown`](./dropdown.md)
+- [`.zl-dropdown`](./dropdown.md)

@@ -1,11 +1,11 @@
-# XUI 2
+# Zill Library
 
-The XUI toolkit was born because we like very much to create web-based tools, and we often found the need to have a standard way to define common UI elements to speed up our development process.
+The Zill Web UI Library (formerly known as XUI) was born out of the need to standarize common UI elements to build web-based tools. Elements such as windows, buttons, dialogs, dropdowns, context menus and more.
 
 ## Installation
 
 ```sh
-yarn add @rsthn/xui
+yarn add zill
 ```
 
 ## Elements

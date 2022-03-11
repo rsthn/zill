@@ -5,7 +5,7 @@ Floating container, has a header bar and a content area where other elements can
 ### Sample Code
 
 ```html
-<xui-dialog class="x-draggable">
+<zl-dialog class="x-draggable">
     <div class="header">
         <b><i class="fa fa-cog"></i>Configuration</b>
 
@@ -19,12 +19,12 @@ Floating container, has a header bar and a content area where other elements can
     <div class="content p-4 text-center" style="width: 320px;">
         Hello World
     </div>
-</xui-dialog>
+</zl-dialog>
 ```
 
 ### Preview
 
-![xui-dialog](./img/xui-dialog.png)
+![zl-dialog](./img/zl-dialog.png)
 
 &nbsp;<br/>
 ## CSS Class Modifiers
@@ -52,7 +52,7 @@ Floating container, has a header bar and a content area where other elements can
 ## Other Previews
 
 #### .x-title-right .x-buttons-left
-![xui-dialog](./img/xui-dialog-x-title-right.png)
+![zl-dialog](./img/zl-dialog-x-title-right.png)
 
 #### .x-title-center .x-buttons-hidden
-![xui-dialog](./img/xui-dialog-x-title-center.png)
+![zl-dialog](./img/zl-dialog-x-title-center.png)

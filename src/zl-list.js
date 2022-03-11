@@ -1,5 +1,5 @@
 /*
-**	xui/xui-list
+**	zl/zl-list
 **
 **	Copyright (c) 2019-2021, RedStar Technologies, All rights reserved.
 **	https://www.rsthn.com/
@@ -14,13 +14,13 @@
 **	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-import xui from './xui';
+import zl from './zl';
 
 /**
  * Options List
  */
 
-xui.register ('xui-list', 'xui-element',
+zl.register ('zl-list', 'zl-element',
 {
 	'event click span[data-value]': function(evt)
 	{
@@ -29,7 +29,7 @@ xui.register ('xui-list', 'xui-element',
 
 	ready: function()
 	{
-		this.classList.add('xui-list');
+		this.classList.add('zl-list');
 		this.type = 'field';
 
 		if (this.dataset.rows)
@@ -39,7 +39,7 @@ xui.register ('xui-list', 'xui-element',
 		}
 
 		//if (this.classList.contains('x-scrollable'))
-		//	xui.scrollable.attach(this);
+		//	zl.scrollable.attach(this);
 	},
 
 	onConnected: function()

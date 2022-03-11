@@ -1,5 +1,5 @@
 /*
-**	xui/xui-tabs
+**	zl/zl-tabs
 **
 **	Copyright (c) 2019-2021, RedStar Technologies, All rights reserved.
 **	https://www.rsthn.com/
@@ -14,13 +14,13 @@
 **	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-import xui from './xui';
+import zl from './zl';
 
 /**
  * Content tabs.
  */
 
-xui.register ('xui-tabs',
+zl.register ('zl-tabs',
 {
 	'event click [data-name]': function (evt) {
 		this.selectTab (evt.source.dataset.name);
@@ -28,7 +28,7 @@ xui.register ('xui-tabs',
 
 	ready: function()
 	{
-		this.classList.add('xui-tabs');
+		this.classList.add('zl-tabs');
 
 		if ('container' in this.dataset)
 			this.container = document.querySelector(this.dataset.container);

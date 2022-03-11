@@ -1,5 +1,5 @@
 /*
-**	xui/xui-dialog
+**	zl/zl-dialog
 **
 **	Copyright (c) 2019-2021, RedStar Technologies, All rights reserved.
 **	https://www.rsthn.com/
@@ -14,20 +14,20 @@
 **	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-import xui from './xui';
+import zl from './zl';
 
 /**
  * Floating dialog.
  */
 
-xui.register ('xui-dialog', 'xui-element',
+zl.register ('zl-dialog', 'zl-element',
 {
 	ready: function()
 	{
-		this.classList.add('xui-dialog');
+		this.classList.add('zl-dialog');
 
 		if (this.classList.contains('x-draggable'))
-			xui.draggable.attach(this.querySelector('.header'), this, 'xui-dialog');
+			zl.draggable.attach(this.querySelector('.header'), this, 'zl-dialog');
 	},
 
 	show: function(imm=false)

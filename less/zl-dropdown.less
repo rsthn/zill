@@ -1,37 +1,37 @@
 /* ****************************************** */
-.xui-dropdown {
+.zl-dropdown {
 	display: inline-block; position: relative; font-size: 1rem;
 }
 
-.xui-dropdown li {
+.zl-dropdown li {
 	list-style: none; margin: 0; padding: 0; position: relative;
 }
 
-.xui-dropdown ul {
+.zl-dropdown ul {
 	display: none; margin: 0; padding: 0; position: absolute; z-index: 1; left: 0; top: 26*@px;
 	background: @base-color + #303030; white-space: nowrap;
 	box-shadow: 2px 2px 8px -2px rgba(0,0,0,0.7); border-radius: @border-radius;
 	min-width: 170px; border: 1px solid rgba(0,0,0,0.25);
 }
 
-.xui-dropdown ul:first-child {
+.zl-dropdown ul:first-child {
 	top: 0;
 }
 
-.xui-dropdown > b {
+.zl-dropdown > b {
     display: inline-block; padding: 5*@px 8*@px; font-weight: normal;
 }
 
-.xui-dropdown li > b, .xui-dropdown li > em {
+.zl-dropdown li > b, .zl-dropdown li > em {
 	display: block; position: relative; padding: 5*@px 36*@px 5*@px 28*@px; font-weight: normal; font-style: normal;
 	text-shadow: 0px -1px 0px #000;
 }
 
-.xui-dropdown.x-no-icons li > b {
+.zl-dropdown.x-no-icons li > b {
 	padding: 5*@px 36*@px 5*@px 12*@px;
 }
 
-.xui-dropdown li > em {
+.zl-dropdown li > em {
 	color: @text-base; border-bottom: 1px solid @base-color;
 	padding: 5*@px 36*@px 5*@px 12*@px;
 	box-shadow: 0px 1px 0px @border-color-hi;
@@ -39,77 +39,77 @@
 	border-radius: @border-radius @border-radius 0 0;
 }
 
-.xui-dropdown li > b > i {
+.zl-dropdown li > b > i {
 	margin-left: -18*@px; margin-right: 4*@px; font-size: 0.85em;
 }
 
-.xui-dropdown.x-no-icons li > b > i {
+.zl-dropdown.x-no-icons li > b > i {
 	display: none;
 }
 
-.xui-dropdown:hover > b {
+.zl-dropdown:hover > b {
 	color: @text-base; background: @border-color-mid;
 }
 
-.xui-dropdown li:hover > b {
+.zl-dropdown li:hover > b {
     color: @text-base; background: @border-color-mid;
 }
 
-.xui-dropdown li:last-child:hover > b {
+.zl-dropdown li:last-child:hover > b {
     border-radius: 0 0 @border-radius @border-radius;
 }
 
-.xui-dropdown li:first-child:hover > b {
+.zl-dropdown li:first-child:hover > b {
     border-radius: 0 @border-radius 0 0;
 }
 
-.xui-dropdown li ul li:first-child:hover > b {
+.zl-dropdown li ul li:first-child:hover > b {
     border-radius: @border-radius @border-radius 0 0;
 }
 
-.xui-dropdown li.sub-menu:before {
+.zl-dropdown li.sub-menu:before {
 	float: right; content: "\25BA"; margin-top: 5*@px; margin-right: 6*@px; color: @text-lightest;
 	text-shadow: 0px -1px 0px rgba(0,0,0,0.5);
 }
 
-.xui-dropdown:hover > b + ul, .xui-dropdown.visible > ul {
+.zl-dropdown:hover > b + ul, .zl-dropdown.visible > ul {
     display: inline-block;
 }
 
-.xui-dropdown li:hover > ul {
+.zl-dropdown li:hover > ul {
 	display: inline-block; right: 0; top: 0; transform: translate(90%, 0px);
 }
 
-.xui-dropdown li:empty {
+.zl-dropdown li:empty {
     border-bottom: 1px solid rgba(255,255,255,0.2);
     border-top: 1px solid rgba(0,0,0,0.2);
 }
 
-.xui-dropdown li b:active {
+.zl-dropdown li b:active {
     animation: fast-blink 0.250s 1;
 }
 
 /* ****************************************** */
-.xui-dropdown.x-compact {
+.zl-dropdown.x-compact {
 	font-size: 1rem;
 }
 
-.xui-dropdown.x-compact li > b {
+.zl-dropdown.x-compact li > b {
 	padding: 4*@px 32*@px 4*@px 28*@px;
 }
 
-.xui-dropdown.x-compact li > em {
+.zl-dropdown.x-compact li > em {
 	padding: 4*@px 32*@px 4*@px 12*@px;
 }
 
-.xui-dropdown.x-compact.x-no-icons li > b {
+.zl-dropdown.x-compact.x-no-icons li > b {
 	padding: 4*@px 32*@px 4*@px 12*@px;
 }
 
-.xui-dropdown.x-compact li > b > i {
+.zl-dropdown.x-compact li > b > i {
 	margin-left: -18*@px; margin-right: 4*@px;
 }
 
-.xui-dropdown.x-compact li.sub-menu:before {
+.zl-dropdown.x-compact li.sub-menu:before {
 	margin-top: 3*@px; margin-right: 6*@px;
 }

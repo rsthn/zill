@@ -1,5 +1,5 @@
 /*
-**	xui/xui-element
+**	zl/zl-element
 **
 **	Copyright (c) 2019-2021, RedStar Technologies, All rights reserved.
 **	https://www.rsthn.com/
@@ -14,13 +14,13 @@
 **	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-import xui from './xui';
+import zl from './zl';
 
 /**
  * Base element.
  */
 
-xui.register ('xui-element',
+zl.register ('zl-element',
 {
 	init: function() {
 	}

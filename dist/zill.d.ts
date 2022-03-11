@@ -1,4 +1,4 @@
-export class xui
+export class zl
 {
 	/**
 	 * Registered elements with the `register` method.

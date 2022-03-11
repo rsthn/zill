@@ -26,44 +26,44 @@
 }
 
 /* ****************************************** */
-.xui-dialog {
+.zl-dialog {
 	position: absolute; overflow: visible; font-size: 1rem; display: flex; flex-direction: column;
 	transform-style: preserve-3d; transform-origin: 50% 0%; left: 50px; top: 50px;
 	border: 1px solid @border-color-lo; background: @background-base;
 	box-shadow: 0px 0px 12px @shadow-color-hard; border-radius: @border-radius;
 }
 
-.xui-dialog.centered-x {
+.zl-dialog.centered-x {
 	transform: translateX(-50%); left: 50%;
 }
 
-.xui-dialog.centered-y {
+.zl-dialog.centered-y {
 	transform: translateY(-50%); top: 50%;
 }
 
-.xui-dialog.maximized {
+.zl-dialog.maximized {
 	left: 0 !important; top: 0 !important; width: 100% !important; height: 100% !important; z-index: 9999 !important;
 	transform: translateX(0) translateY(0); box-sizing: border-box;
 }
 
-.xui-dialog.hidden {
+.zl-dialog.hidden {
 	display: flex !important; pointer-events: none;
 	animation-name: dialog-hidden; animation-duration: 0.350s; animation-fill-mode: both;
 	animation-timing-function: cubic-bezier(0.550, 0.055, 0.675, 0.190);
 }
 
-.xui-dialog.hidden.imm {
+.zl-dialog.hidden.imm {
 	transform: scale(0.1) perspective(100*@px) translateZ(-300*@px) rotateX(30deg) !important;
 	opacity: 0.0 !important;
 }
 
-.xui-dialog.visible {
+.zl-dialog.visible {
 	display: flex !important;
 	animation-name: dialog-visible; animation-duration: 0.350s; animation-fill-mode: both;
 	animation-timing-function: cubic-bezier(0.165, 0.840, 0.440, 1.000);
 }
 
-.xui-dialog.visible.imm {
+.zl-dialog.visible.imm {
 	transform: scale(1.0) perspective(100*@px) translateZ(0*@px) rotateX(0deg) !important;
 	opacity: 1.0 !important;
 }
@@ -71,7 +71,7 @@
 /* ****************************************** */
 /* HEADER */
 
-.xui-dialog > .header {
+.zl-dialog > .header {
 	padding: 5*@px 12*@px;
 	border-top: 1px solid @border-color-hi; border-bottom: 1px solid @border-color-mid;
 	background: linear-gradient(@base-color + #404040, @base-color + #303030);
@@ -79,75 +79,75 @@
 	user-select: none; flex: 0 0 auto;
 }
 
-.xui-dialog > .header {
+.zl-dialog > .header {
 	display: block; position: relative; font-size: 0;
 }
 
-.xui-dialog > .header > b {
+.zl-dialog > .header > b {
 	display: block; font-weight: normal; text-align: left; font-size: 1rem;
 }
 
-.xui-dialog > .header > b i {
+.zl-dialog > .header > b i {
 	margin-right: 4*@px;
 }
 
-.xui-dialog > .header > span {
+.zl-dialog > .header > span {
 	position: absolute; top: 0; right: 0;
 }
 
-.xui-dialog > .header > span > i {
+.zl-dialog > .header > span > i {
 	display: inline-block; padding: 6*@px 12*@px; font-size: 1rem; text-align: center; font-style: normal;
 }
 
-.xui-dialog > .header > span > i:hover {
+.zl-dialog > .header > span > i:hover {
 	background: @border-color-hi;
 }
 
-.xui-dialog > .header > span > i:last-child {
+.zl-dialog > .header > span > i:last-child {
 	border-radius: 0 @border-radius 0 0;
 }
 
-.xui-dialog > .header > span > i[data-action='restore'], .xui-dialog.maximized > .header > span > i[data-action='maximize'] {
+.zl-dialog > .header > span > i[data-action='restore'], .zl-dialog.maximized > .header > span > i[data-action='maximize'] {
 	display: none;
 }
 
-.xui-dialog.maximized > .header > span > i[data-action='restore'] {
+.zl-dialog.maximized > .header > span > i[data-action='restore'] {
 	display: inline-block;
 }
 
 /* ~ */
-.xui-dialog.x-buttons-left > .header > span > i:last-child {
+.zl-dialog.x-buttons-left > .header > span > i:last-child {
 	border-radius: 0;
 }
 
-.xui-dialog.x-buttons-left > .header > span > i:first-child {
+.zl-dialog.x-buttons-left > .header > span > i:first-child {
 	border-radius: @border-radius 0 0 0;
 }
 
-.xui-dialog.x-buttons-left > .header > span {
+.zl-dialog.x-buttons-left > .header > span {
 	right: auto; left: 0;
 }
 
-.xui-dialog.x-buttons-left > .header > span > i {
+.zl-dialog.x-buttons-left > .header > span > i {
 	margin-left: 0; margin-right: 4*@px;
 }
 
-.xui-dialog.x-buttons-hidden > .header > span {
+.zl-dialog.x-buttons-hidden > .header > span {
 	display: none;
 }
 
-.xui-dialog.x-title-center > .header > b {
+.zl-dialog.x-title-center > .header > b {
 	text-align: center;
 }
 
-.xui-dialog.x-title-right > .header > b {
+.zl-dialog.x-title-right > .header > b {
 	text-align: right;
 }
 
-.xui-dialog.x-title-bold > .header > b {
+.zl-dialog.x-title-bold > .header > b {
 	font-weight: bold;
 }
 
-.xui-dialog > .content {
+.zl-dialog > .content {
 	flex: 1 1 auto;
 }

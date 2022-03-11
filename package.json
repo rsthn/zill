@@ -1,34 +1,39 @@
 {
-    "name": "@rsthn/xui",
-    "version": "2.0.12",
-    "description": "UI Toolkit to build web based tools.",
+    "name": "zill",
+    "version": "2.0.13",
+    "description": "UI library to build web based tools.",
+    "source": "src/index.js",
     "main": "src/index.js",
     "type": "module",
-    "types": "./dist/xui.d.ts",
+    "types": "./dist/zill.d.ts",
     "scripts": {
         "test": "echo Ok",
         "requirements": "yarn global add shx parcel less",
         "clean-css": "shx mkdir -p dist && shx rm -f dist/*.css && shx rm -f dist/*.png",
         "clean-js": "shx mkdir -p dist && shx rm -f dist/*.js",
-        "build-css": "yarn clean-css && parcel build less/index.less --target css --public-url ./ --no-source-maps --no-cache",
-        "build-js": "yarn clean-js && parcel build src/index.js --target browser --public-url ./ --no-source-maps --no-cache",
+        "build-css": "yarn clean-css && parcel build less/index.less --target css --public-url ./ --no-cache",
+        "build-js": "yarn clean-js && parcel build --target browser --public-url ./ --no-cache",
         "build": "yarn tsdoc && yarn build-css && yarn build-js",
-        "tsdoc": "node ./scripts/tsdoc.js ./src/index.js ./dist/xui.d.ts",
+        "tsdoc": "node ./scripts/tsdoc.js ./src/index.js ./dist/zill.d.ts",
         "deploy": "yarn build && node ./scripts/deploy.js",
         "commit": "node ./scripts/commit.js"
     },
     "css": "dist/index.css",
-    "browser": "dist/index.js",
+    "browser": "dist/zill.js",
     "targets": {
         "css": {
             "engines": {
-                "browsers": "since 2019-01"
-            }
+                "browsers": "since 2020-01"
+            },
+            "optimize": true,
+            "sourceMap": false
         },
-        "js": {
+        "browser": {
             "engines": {
-                "browsers": "since 2019-01"
-            }
+                "browsers": "since 2020-01"
+            },
+            "optimize": true,
+            "sourceMap": false
         }
     },
     "files": [
@@ -37,14 +42,14 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/rsthn/xui.git"
+        "url": "git+https://github.com/rsthn/zill.git"
     },
     "author": "RedStar Technologies",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/rsthn/xui/issues"
+        "url": "https://github.com/rsthn/zill/issues"
     },
-    "homepage": "https://github.com/rsthn/xui#readme",
+    "homepage": "https://github.com/rsthn/zill#readme",
     "devDependencies": {
         "@parcel/transformer-less": "^2.1.1"
     },

@@ -1,5 +1,5 @@
 /*
-**	xui/xui-context
+**	zl/zl-context
 **
 **	Copyright (c) 2019-2021, RedStar Technologies, All rights reserved.
 **	https://www.rsthn.com/
@@ -14,13 +14,13 @@
 **	USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-import xui from './xui';
+import zl from './zl';
 
 /**
  * Context menu.
  */
 
-xui.register ('xui-context',
+zl.register ('zl-context',
 {
 	isRoot: true,
 
@@ -32,8 +32,8 @@ xui.register ('xui-context',
 
 	init: function()
 	{
-		this.classList.add('xui-dropdown');
-		this.classList.add('xui-context');
+		this.classList.add('zl-dropdown');
+		this.classList.add('zl-context');
 	},
 
 	onConnected: function()
@@ -52,8 +52,8 @@ xui.register ('xui-context',
 
 			window.addEventListener('mouseup', hdl, true);
 
-			let parent = xui.position.get(this.root);
-			xui.position.set(this, evt.clientX - parent.x, evt.clientY - parent.y);
+			let parent = zl.position.get(this.root);
+			zl.position.set(this, evt.clientX - parent.x, evt.clientY - parent.y);
 		});
 	},
 

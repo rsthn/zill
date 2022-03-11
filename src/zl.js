@@ -2,9 +2,9 @@
 import { Element } from 'riza';
 import { Template } from '@rsthn/rin';
 
-//!class xui
+//!class zl
 
-const xui =
+const zl =
 {
 	/**
 	 * Registered elements with the `register` method.
@@ -174,7 +174,7 @@ const xui =
 				this.state.sx = evt.clientX;
 				this.state.sy = evt.clientY;
 				this.state.target = target;
-				this.state.pos = xui.position.get(target);
+				this.state.pos = zl.position.get(target);
 				this.state.enabled = true;
 
 				target.front();
@@ -195,7 +195,7 @@ const xui =
 			let dx = evt.clientX - this.state.sx;
 			let dy = evt.clientY - this.state.sy;
 
-			xui.position.set (this.state.target, this.state.pos.x + dx, this.state.pos.y + dy);
+			zl.position.set (this.state.target, this.state.pos.x + dx, this.state.pos.y + dy);
 
 			if ('onDraggableMoved' in this.state.target)
 				this.state.target.onDraggableMoved(this.state.pos.x + dx, this.state.pos.y + dy);
@@ -427,7 +427,7 @@ const xui =
 
 					for (let i of this.target.children)
 					{
-						if (xui.overlapTest(this.rect, i.getBoundingClientRect()))
+						if (zl.overlapTest(this.rect, i.getBoundingClientRect()))
 						{
 							i.classList.add('selected');
 							list.push(i);
@@ -601,7 +601,7 @@ const xui =
 				return;
 			}
 
-			xui.loadAsDataURL (fileList[i], function(url) {
+			zl.loadAsDataURL (fileList[i], function(url) {
 				result.push({ name: fileList[i].name, size: fileList[i].size, url: url });
 				loadNext(i+1);
 			});
@@ -611,4 +611,4 @@ const xui =
 	}
 };
 
-export default xui;
+export default zl;
