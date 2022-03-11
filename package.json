@@ -1,43 +1,34 @@
 {
     "name": "zill",
-    "version": "2.0.13",
+    "version": "2.0.14",
     "description": "UI library to build web based tools.",
-    "source": "src/index.js",
-    "main": "src/index.js",
     "type": "module",
+    "main": "src/index.js",
+    "source": "src/index.js",
+    "module": "dist/zill.js",
     "types": "./dist/zill.d.ts",
+    "css": "dist/zill.css",
     "scripts": {
         "test": "echo Ok",
         "requirements": "yarn global add shx parcel less",
         "clean-css": "shx mkdir -p dist && shx rm -f dist/*.css && shx rm -f dist/*.png",
         "clean-js": "shx mkdir -p dist && shx rm -f dist/*.js",
-        "build-css": "yarn clean-css && parcel build less/index.less --target css --public-url ./ --no-cache",
-        "build-js": "yarn clean-js && parcel build --target browser --public-url ./ --no-cache",
+        "build-css": "yarn clean-css && parcel build less/index.less --target css --no-cache",
+        "build-js": "yarn clean-js && parcel build --target module --no-cache",
         "build": "yarn tsdoc && yarn build-css && yarn build-js",
         "tsdoc": "node ./scripts/tsdoc.js ./src/index.js ./dist/zill.d.ts",
         "deploy": "yarn build && node ./scripts/deploy.js",
         "commit": "node ./scripts/commit.js"
     },
-    "css": "dist/index.css",
-    "browser": "dist/zill.js",
+    "browserslist": "since 2020-01",
     "targets": {
         "css": {
-            "engines": {
-                "browsers": "since 2020-01"
-            },
-            "optimize": true,
-            "sourceMap": false
-        },
-        "browser": {
-            "engines": {
-                "browsers": "since 2020-01"
-            },
             "optimize": true,
             "sourceMap": false
         }
     },
     "files": [
-        "dist",
+        "dist/",
         "LICENSE"
     ],
     "repository": {
@@ -51,10 +42,9 @@
     },
     "homepage": "https://github.com/rsthn/zill#readme",
     "devDependencies": {
-        "@parcel/transformer-less": "^2.1.1"
+        "@parcel/transformer-less": "^2.3.2"
     },
     "dependencies": {
-        "@rsthn/rin": "^2.0.33",
-        "riza": "^1.0.45"
+        "riza": "^1.1.1"
     }
 }

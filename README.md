@@ -10,4 +10,4 @@ yarn add zill
 
 ## Elements
 
-The [ELEMENTS.md](./docs/ELEMENTS.md) file in the [docs](./docs/) folder contains all the currently available XUI elements and their respective documentation.
+The [ELEMENTS.md](./docs/ELEMENTS.md) file in the [docs](./docs/) folder contains all the currently available Zill elements and their respective documentation.

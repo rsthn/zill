@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { Template } from '@rsthn/rin';
+import { Template } from 'rinn';
 import path from 'path';
 
 // *************************************************************

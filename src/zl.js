@@ -1,6 +1,5 @@
 
-import { Element } from 'riza';
-import { Template } from '@rsthn/rin';
+import { Template, Element } from 'riza';
 
 //!class zl
 

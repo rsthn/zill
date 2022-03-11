@@ -100,7 +100,7 @@
   dependencies:
     detect-libc "^1.0.3"
 
-"@parcel/transformer-less@^2.1.1":
+"@parcel/transformer-less@^2.3.2":
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/@parcel/transformer-less/-/transformer-less-2.3.2.tgz#5e9fe261e6d3a196f89cfb811e60c549f1034e37"
   integrity sha512-elQ00PiUkadFM2DdZrqTciobXSQjPkZA5ZSfdC/lfW7aSP28bnLI1EV3FfHZhiwJcmJ/nccmT2ZwRVwJKus7hg==
@@ -154,14 +154,6 @@
     "@parcel/utils" "2.3.2"
     chrome-trace-event "^1.0.2"
     nullthrows "^1.1.1"
-
-"@rsthn/rin@^2.0.33", "@rsthn/rin@^2.0.36":
-  version "2.0.36"
-  resolved "https://registry.yarnpkg.com/@rsthn/rin/-/rin-2.0.36.tgz#c80eefc20e658fe518aa074972fbb5309350174a"
-  integrity sha512-ihrf5KoEmrYYI1IuYa1kup835lJTMK6yZhRDFnRK7I0p1jLJfA/mEsBHPiV+9K7K4d3hJtgnLlp2GW/MSN2MNw==
-  dependencies:
-    base-64 "^1.0.0"
-    node-fetch "^2.6.1"
 
 ansi-styles@^4.1.0:
   version "4.3.0"
@@ -356,7 +348,7 @@ node-addon-api@^3.2.1:
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-3.2.1.tgz#81325e0a2117789c0128dab65e7e38f07ceba161"
   integrity sha512-mmcei9JghVNDYydghQmeDX8KoAm0FAiYyIcUt/N4nhyAipB17pllZQDOJD2fotxABnt4Mdz+dKTO7eftLg4d0A==
 
-node-fetch@^2.6.1, node-fetch@^2.6.7:
+node-fetch@^2.6.7:
   version "2.6.7"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.7.tgz#24de9fba827e3b4ae44dc8b20256a379160052ad"
   integrity sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==
@@ -393,15 +385,20 @@ prr@~1.0.1:
   resolved "https://registry.yarnpkg.com/prr/-/prr-1.0.1.tgz#d3fc114ba06995a45ec6893f484ceb1d78f5f476"
   integrity sha1-0/wRS6BplaRexok/SEzrHXj19HY=
 
-riza@^1.0.45:
-  version "1.0.59"
-  resolved "https://registry.yarnpkg.com/riza/-/riza-1.0.59.tgz#7a703b68e364be3062c287ca1dd77dae34bdb136"
-  integrity sha512-CFf6BHt1zlcWZfO0mKyHU3iBAj3x2S4mZcSTEFZ7YLLpoVw6TD22EKEOHpZ1QqHsRtMnn/Jjb4X/Mg1QWySsBQ==
+rinn@^2.0.38:
+  version "2.0.39"
+  resolved "https://registry.yarnpkg.com/rinn/-/rinn-2.0.39.tgz#796d7d6cd6502b5aa028c5289946ee3e1fc4f878"
+  integrity sha512-VpisFAtYBuHcV7cIK62bypi2xRS5RP5qVzD42A6XhWlSA0Mjl+v9dVNSdvw84xhI9S+bo/XNeuXNi3jmyzBgaA==
+
+riza@^1.1.0:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/riza/-/riza-1.1.1.tgz#ba7e953b4059fc6ac34532b210176853a4844f8d"
+  integrity sha512-3SFrnkISWnOpb005fbG6uoBGrO4U3623Sg/8le39kZPwIhFRxYjuNSQ61ritmPRHDS+HST6LAwEy9avWckSSNg==
   dependencies:
-    "@rsthn/rin" "^2.0.36"
     base-64 "^1.0.0"
     fs-extra "^10.0.1"
     node-fetch "^2.6.7"
+    rinn "^2.0.38"
 
 "safer-buffer@>= 2.1.2 < 3":
   version "2.1.2"
