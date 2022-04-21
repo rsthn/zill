@@ -30,6 +30,11 @@ zl.register ('zl-dialog', 'zl-element',
 			zl.draggable.attach(this.querySelector('.header'), this, 'zl-dialog');
 	},
 
+	isVisible: function()
+	{
+		return this.classList.contains('visible');
+	},
+
 	show: function(imm=false)
 	{
 		if (this.classList.contains('visible'))

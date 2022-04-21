@@ -1,6 +1,6 @@
 {
     "name": "zill",
-    "version": "2.0.14",
+    "version": "2.0.15",
     "description": "UI library to build web based tools.",
     "type": "module",
     "main": "src/index.js",
@@ -8,20 +8,23 @@
     "module": "dist/zill.js",
     "types": "./dist/zill.d.ts",
     "css": "dist/zill.css",
+    "packageManager": "pnpm@6.32.4",
     "scripts": {
         "test": "echo Ok",
-        "requirements": "yarn global add shx parcel less",
         "clean-css": "shx mkdir -p dist && shx rm -f dist/*.css && shx rm -f dist/*.png",
         "clean-js": "shx mkdir -p dist && shx rm -f dist/*.js",
-        "build-css": "yarn clean-css && parcel build less/index.less --target css --no-cache",
-        "build-js": "yarn clean-js && parcel build --target module --no-cache",
-        "build": "yarn tsdoc && yarn build-css && yarn build-js",
+        "build-css": "pnpm clean-css && parcel build less/index.less --target css --no-cache",
+        "build-js": "pnpm clean-js && parcel build --target module --no-cache",
+        "build": "pnpm tsdoc && pnpm build-css && pnpm build-js",
         "tsdoc": "node ./scripts/tsdoc.js ./src/index.js ./dist/zill.d.ts",
-        "deploy": "yarn build && node ./scripts/deploy.js",
+        "deploy": "pnpm build && node ./scripts/deploy.js",
         "commit": "node ./scripts/commit.js"
     },
     "browserslist": "since 2020-01",
     "targets": {
+        "module": {
+            "optimize": true
+        },
         "css": {
             "optimize": true,
             "sourceMap": false
@@ -41,10 +44,12 @@
         "url": "https://github.com/rsthn/zill/issues"
     },
     "homepage": "https://github.com/rsthn/zill#readme",
-    "devDependencies": {
-        "@parcel/transformer-less": "^2.3.2"
-    },
     "dependencies": {
-        "riza": "^1.1.1"
+        "riza": "^1.1.4"
+    },
+    "devDependencies": {
+        "@parcel/transformer-less": "2.4.1",
+        "rinn": "^2.0.42",
+        "shx": "^0.3.4"
     }
 }
